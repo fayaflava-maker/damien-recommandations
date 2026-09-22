@@ -162,6 +162,7 @@
     <button class="light navbtn" data-target="earnings">Mes rémunérations</button>
     <button class="light navbtn" data-target="profile">Mon profil</button><button class="light navbtn" data-target="notificationsPanel">🔔 Notifications <span id="notifCount"></span></button>
 <button id="referrersNav" class="light navbtn hidden" data-target="referrersPanel">Mes apporteurs</button>
+<button id="exportsNav" class="light navbtn hidden" data-target="exportsPanel">Exports</button>
 <button id="adminNav" class="light navbtn hidden" data-target="adminPanel">Tableau de bord</button>
   </div>
 </nav>
@@ -313,6 +314,18 @@
       <div id="referrerCards"><p class="muted">Aucun apporteur.</p></div>
     </section>
 
+
+    <section id="exportsPanel" class="card hidden">
+      <h2>Exports Excel</h2>
+      <p class="muted">Téléchargez les données de votre application pour votre suivi et votre gestion.</p>
+      <div class="admin-kpis" style="margin-top:16px">
+        <div class="admin-kpi"><span>Contacts</span><b>Apporteurs + recommandations</b><button id="exportContacts" class="primary" style="margin-top:12px">📊 Exporter tous les contacts</button></div>
+        <div class="admin-kpi"><span>Apporteurs</span><b>Coordonnées complètes</b><button id="exportReferrers" class="light" style="margin-top:12px">Exporter les apporteurs</button></div>
+        <div class="admin-kpi"><span>Recommandations</span><b>Contacts & suivi</b><button id="exportRecommendations" class="light" style="margin-top:12px">Exporter les recommandations</button></div>
+        <div class="admin-kpi"><span>Rémunérations</span><b>Suivi comptable</b><button id="exportRemunerations" class="light" style="margin-top:12px">💶 Exporter les rémunérations</button></div>
+      </div>
+    </section>
+
     <section id="adminPanel" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
@@ -438,11 +451,11 @@ async function boot(){
  $('role').textContent = profile?.role==='admin' ? 'Administration' : 'Apporteur d’affaires';
  await setupOnboarding(profile,user); await setupShareLink(profile,user); await adminNotificationPulse(profile);
  if(profile?.role==='admin'){
-   $('adminNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden');
+   $('adminNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden'); $('exportsNav').classList.remove('hidden');
    // Admin has a dedicated workspace: hide apporteur-facing views.
    ['home','recommend','tracking','earnings','profile'].forEach(id=>$(id)?.classList.add('hidden'));
    document.querySelectorAll('.navbtn').forEach(b=>{
-     if(!['adminPanel','referrersPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
+     if(!['adminPanel','referrersPanel','exportsPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
    });
    $('adminPanel').classList.remove('hidden');
    await loadAdmin(); await loadReferrers();
@@ -478,8 +491,19 @@ $('referralForm').onsubmit=async e=>{
  e.target.reset(); message('Recommandation envoyée avec succès.'); await loadReferrals();
 };
 
-document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',()=>{
-  document.getElementById(btn.dataset.target)?.scrollIntoView({behavior:'smooth',block:'start'});
+document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',async()=>{
+  const target=btn.dataset.target;
+  const adminTargets=['adminPanel','referrersPanel','exportsPanel','notificationsPanel'];
+  if(adminTargets.includes(target)){
+    adminTargets.forEach(id=>$(id)?.classList.add('hidden'));
+    $(target)?.classList.remove('hidden');
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(target==='referrersPanel') await loadReferrers();
+    if(target==='adminPanel') await loadAdmin();
+    if(target==='notificationsPanel') await loadNotifications();
+  }
+  document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'});
 }));
 $('heroRecommend').onclick=()=>document.getElementById('recommend')?.scrollIntoView({behavior:'smooth',block:'start'});
 
@@ -621,48 +645,44 @@ function saveXlsx(sheets,filename){
  }
  XLSX.writeFile(wb,filename);
 }
-async function exportAdminContacts(){
- try{
-   const [{data:profiles,error:pe},{data:refs,error:re}]=await Promise.all([
-     supabase.from('profiles').select('id,role,first_name,last_name,email,phone,address,postal_code,city,created_at').order('created_at',{ascending:false}),
-     supabase.from('referrals').select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,status,created_at').order('created_at',{ascending:false})
-   ]);
-   if(pe||re) throw pe||re;
-   const pmap=Object.fromEntries((profiles||[]).map(p=>[p.id,p]));
-   const apporteurs=(profiles||[]).filter(p=>p.role==='referrer').map(p=>({
-     'Prénom':p.first_name||'','Nom':p.last_name||'','Téléphone':p.phone||'','E-mail':p.email||'',
-     'Adresse':p.address||'','Code postal':p.postal_code||'','Ville':p.city||'','Inscription':excelDate(p.created_at)
-   }));
-   const recommandations=(refs||[]).map(r=>{
-     const a=pmap[r.referrer_id]||{};
-     return {'Prénom':r.lead_first_name||'','Nom':r.lead_last_name||'','Téléphone':r.lead_phone||'','E-mail':r.lead_email||'',
-       'Commune':r.commune||'','Projet':r.project_type||'','Type de bien':r.property_type||'','Lien':r.relationship||'',
-       'Statut':r.status||'','Apporteur':`${a.first_name||''} ${a.last_name||''}`.trim(),'Date':excelDate(r.created_at)};
-   });
-   saveXlsx({'Apporteurs':apporteurs,'Recommandations':recommandations},`contacts-damien-recommandations-${new Date().toISOString().slice(0,10)}.xlsx`);
- }catch(err){console.error(err);message('Export impossible : '+(err.message||'erreur inconnue'),true)}
+async function getExportData(){
+ const [{data:profiles,error:pe},{data:refs,error:re}]=await Promise.all([
+   supabase.from('profiles').select('id,role,first_name,last_name,email,phone,address,postal_code,city,created_at').order('created_at',{ascending:false}),
+   supabase.from('referrals').select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,status,created_at').order('created_at',{ascending:false})
+ ]);
+ if(pe||re) throw pe||re;
+ const pmap=Object.fromEntries((profiles||[]).map(p=>[p.id,p]));
+ const apporteurs=(profiles||[]).filter(p=>p.role==='referrer').map(p=>({
+   'Prénom':p.first_name||'','Nom':p.last_name||'','Téléphone':p.phone||'','E-mail':p.email||'',
+   'Adresse':p.address||'','Code postal':p.postal_code||'','Ville':p.city||'','Inscription':excelDate(p.created_at)
+ }));
+ const recommandations=(refs||[]).map(r=>{const a=pmap[r.referrer_id]||{};return {
+   'Prénom':r.lead_first_name||'','Nom':r.lead_last_name||'','Téléphone':r.lead_phone||'','E-mail':r.lead_email||'',
+   'Commune':r.commune||'','Projet':r.project_type||'','Type de bien':r.property_type||'','Lien':r.relationship||'',
+   'Statut':r.status||'','Apporteur':`${a.first_name||''} ${a.last_name||''}`.trim(),'Date':excelDate(r.created_at)
+ }});
+ return {apporteurs,recommandations};
 }
+async function exportAdminContacts(){try{const d=await getExportData();saveXlsx({'Apporteurs':d.apporteurs,'Recommandations':d.recommandations},`contacts-damien-${new Date().toISOString().slice(0,10)}.xlsx`)}catch(e){message('Export impossible : '+e.message,true)}}
+async function exportAdminReferrers(){try{const d=await getExportData();saveXlsx({'Apporteurs':d.apporteurs},`apporteurs-damien-${new Date().toISOString().slice(0,10)}.xlsx`)}catch(e){message('Export impossible : '+e.message,true)}}
+async function exportAdminRecommendations(){try{const d=await getExportData();saveXlsx({'Recommandations':d.recommandations},`recommandations-damien-${new Date().toISOString().slice(0,10)}.xlsx`)}catch(e){message('Export impossible : '+e.message,true)}}
 async function exportAdminRemunerations(){
  try{
-   const {data,error}=await supabase.from('remunerations').select('*,referrals(lead_first_name,lead_last_name,referrer_id)').order('created_at',{ascending:false});
-   if(error) throw error;
-   const ids=[...new Set((data||[]).map(x=>x.referrals?.referrer_id).filter(Boolean))];
-   let pmap={};
-   if(ids.length){
-     const {data:ps}=await supabase.from('profiles').select('id,first_name,last_name').in('id',ids);
-     pmap=Object.fromEntries((ps||[]).map(p=>[p.id,p]));
-   }
-   const rows=(data||[]).map(x=>{
-     const p=pmap[x.referrals?.referrer_id]||{};
-     return {'Contact recommandé':`${x.referrals?.lead_first_name||''} ${x.referrals?.lead_last_name||''}`.trim(),
-       'Apporteur':`${p.first_name||''} ${p.last_name||''}`.trim(),'Rémunération LGM reçue (€)':Number(x.lgm_received_amount||0),
-       'Prime apporteur (€)':Number(x.amount||0),'Mode':x.payment_method==='bank_transfer'?'Virement':x.payment_method==='gift_card'?'Carte cadeau':'',
-       'Statut':x.status||'','Date versement LGM':excelDate(x.lgm_paid_at),'Échéance J+10':excelDate(x.due_at),'Création':excelDate(x.created_at)};
-   });
-   saveXlsx({'Rémunérations':rows},`remunerations-damien-${new Date().toISOString().slice(0,10)}.xlsx`);
- }catch(err){console.error(err);message('Export impossible : '+(err.message||'erreur inconnue'),true)}
+  const {data,error}=await supabase.from('remunerations').select('*,referrals(lead_first_name,lead_last_name,referrer_id)').order('created_at',{ascending:false}); if(error) throw error;
+  const ids=[...new Set((data||[]).map(x=>x.referrals?.referrer_id).filter(Boolean))]; let pmap={};
+  if(ids.length){const {data:ps}=await supabase.from('profiles').select('id,first_name,last_name').in('id',ids);pmap=Object.fromEntries((ps||[]).map(p=>[p.id,p]));}
+  const rows=(data||[]).map(x=>{const p=pmap[x.referrals?.referrer_id]||{};return {
+   'Contact recommandé':`${x.referrals?.lead_first_name||''} ${x.referrals?.lead_last_name||''}`.trim(),'Apporteur':`${p.first_name||''} ${p.last_name||''}`.trim(),
+   'Rémunération LGM reçue (€)':Number(x.lgm_received_amount||0),'Prime apporteur (€)':Number(x.amount||0),
+   'Mode':x.payment_method==='bank_transfer'?'Virement':x.payment_method==='gift_card'?'Carte cadeau':'','Statut':x.status||'',
+   'Date versement LGM':excelDate(x.lgm_paid_at),'Échéance J+10':excelDate(x.due_at),'Création':excelDate(x.created_at)
+  }});
+  saveXlsx({'Rémunérations':rows},`remunerations-damien-${new Date().toISOString().slice(0,10)}.xlsx`);
+ }catch(e){message('Export impossible : '+e.message,true)}
 }
 $('exportContacts')?.addEventListener('click',exportAdminContacts);
+$('exportReferrers')?.addEventListener('click',exportAdminReferrers);
+$('exportRecommendations')?.addEventListener('click',exportAdminRecommendations);
 $('exportRemunerations')?.addEventListener('click',exportAdminRemunerations);
 
 $('adminRefresh').onclick=loadAdmin;
