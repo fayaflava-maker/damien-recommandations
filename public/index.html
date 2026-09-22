@@ -137,6 +137,12 @@
     .leader-card small{display:block;color:#7a8491}.leader-card .metric{text-align:center}.leader-card .metric b{display:block;font-size:17px}
     @media(max-width:700px){.leader-card{grid-template-columns:38px 1fr 1fr}.leader-card .metric:nth-of-type(n+3){display:none}.leader-summary{grid-template-columns:1fr 1fr}.leader-summary>div:last-child{grid-column:1/-1}}
   </style>
+
+<style>
+.legal-card{max-width:1100px;margin:24px auto}.legal-scale{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.legal-scale span{background:#f5f6f8;border-radius:10px;padding:10px}.grid label{display:flex;flex-direction:column;gap:6px}
+@media(max-width:650px){.legal-scale{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header>
@@ -183,8 +189,8 @@
       <span class="eyebrow">APPORTEURS D’AFFAIRES</span>
       <h1>Recommandez,<br>gagnez,<br><em>c’est simple !</em></h1>
       <p>Vous connaissez quelqu’un qui souhaite vendre son bien immobilier ? Parlez-m’en.</p>
-      <div class="reward">Je vous rémunère <b>jusqu’à 1 000 €</b></div>
-      <p class="muted" style="font-size:13px">Rémunération versée après que la vente soit actée chez le notaire.</p>
+      <div class="reward">Je vous rémunère <b>jusqu’à 1 500 €</b></div>
+      <p class="muted" style="font-size:13px">Prime versée par virement bancaire ou carte cadeau, selon les conditions du programme.</p>
       <button class="cta-pink" id="heroRecommend">Faire une recommandation</button>
       <div class="trustline"><span>✓ Simple</span><span>✓ Suivi en temps réel</span><span>✓ Transparent</span></div>
     </div>
@@ -208,10 +214,17 @@
       <button class="light" id="showSignup">Créer mon compte</button>
     </div>
     <div id="signupFields" class="hidden" style="margin-top:15px">
+      <h3>Créer mon compte apporteur</h3>
       <div class="grid">
-        <input id="firstName" placeholder="Prénom"><input id="lastName" placeholder="Nom"><input id="signupPhone" type="tel" placeholder="Téléphone">
+        <label>Prénom *<input id="firstName" autocomplete="given-name" required placeholder="Prénom"></label>
+        <label>Nom *<input id="lastName" autocomplete="family-name" required placeholder="Nom"></label>
+        <label>Téléphone *<input id="signupPhone" type="tel" autocomplete="tel" required placeholder="06…"></label>
+        <label>Adresse *<input id="signupAddress" autocomplete="street-address" required placeholder="Numéro et rue"></label>
+        <label>Code postal *<input id="signupPostalCode" inputmode="numeric" autocomplete="postal-code" required placeholder="Code postal"></label>
+        <label>Ville *<input id="signupCity" autocomplete="address-level2" required placeholder="Ville"></label>
       </div>
-      <button class="primary" id="signup">Créer le compte</button>
+      <label class="check" style="margin-top:14px"><input id="signupTerms" type="checkbox" required><span>J’accepte les conditions du programme de recommandation, les CGU et la politique de confidentialité (version V13).</span></label>
+      <button class="primary" id="signup" style="margin-top:14px">Créer le compte</button>
     </div>
   </section>
 
@@ -247,7 +260,7 @@
 
     <section id="earnings" class="card">
       <h2>Mes rémunérations</h2>
-      <p class="muted">Le versement intervient après que la vente soit actée chez le notaire.</p>
+      <p class="muted">La prime est versée par virement bancaire ou carte cadeau après validation de la transaction, selon les conditions du programme.</p>
       <div class="money-grid">
         <div class="money-card">En cours<b id="moneyPending">0 €</b></div>
         <div class="money-card">Validé<b id="moneyValidated">0 €</b></div>
@@ -262,7 +275,12 @@
         <div class="welcome">Bienvenue dans votre espace 👋</div>
         <div class="muted">Complétez votre profil pour activer pleinement votre espace apporteur.</div>
         <div class="onboard-progress"><span id="onboardBar" style="width:33%"></span></div>
-        <label>Téléphone<input id="profilePhone" type="tel" placeholder="06…"></label>
+        <div class="grid">
+          <label>Téléphone *<input id="profilePhone" type="tel" autocomplete="tel" placeholder="06…"></label>
+          <label>Adresse *<input id="profileAddress" autocomplete="street-address" placeholder="Numéro et rue"></label>
+          <label>Code postal *<input id="profilePostalCode" inputmode="numeric" autocomplete="postal-code" placeholder="Code postal"></label>
+          <label>Ville *<input id="profileCity" autocomplete="address-level2" placeholder="Ville"></label>
+        </div>
         <button id="saveProfile" class="primary">Enregistrer mon profil</button>
         <div id="onboardHint" class="muted" style="margin-top:10px"></div>
       </div>
@@ -325,14 +343,34 @@
           </div>
           <input id="adminSearch" class="admin-search" placeholder="Rechercher un nom, une commune…">
         </div>
-        <div id="adminTableWrap" style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Contact</th><th>Commune</th><th>Apporteur</th><th>Statut</th><th>Rémunération</th><th>Paiement</th><th>Action</th></tr></thead><tbody id="adminRows"></tbody></table></div>
+        <div id="adminTableWrap" style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Contact</th><th>Commune</th><th>Apporteur</th><th>Statut</th><th>Rémunération LGM</th><th>Prime apporteur</th><th>Paiement</th><th>Action</th></tr></thead><tbody id="adminRows"></tbody></table></div>
         <div id="adminMobileRows" class="mobile-ref-list"></div>
       </div>
     </section>
   </section>
+
+<section id="legalV13" class="card legal-card">
+  <h2>Programme de recommandation & informations légales</h2>
+  <p><strong>Damien ROYEZ – Entrepreneur individuel (EI)</strong><br>
+  Conseiller immobilier · RSAC Montpellier 908 588 726 · SIRET 908 588 726 00012.</p>
+  <p>Cette application et le programme de recommandation sont exploités par Damien ROYEZ pour son propre compte. LGM Immobilier n’est pas l’éditeur ni l’exploitant de cette application.</p>
+  <h3>Barème de la prime</h3>
+  <div class="legal-scale">
+    <span>≤ 5 000 € → <b>100 €</b></span><span>5 001–10 000 € → <b>250 €</b></span>
+    <span>10 001–15 000 € → <b>500 €</b></span><span>15 001–20 000 € → <b>750 €</b></span>
+    <span>20 001–25 000 € → <b>1 000 €</b></span><span>25 001–30 000 € → <b>1 250 €</b></span>
+    <span>&gt; 30 000 € → <b>1 500 €</b></span>
+  </div>
+  <p class="muted">Le barème est calculé à partir de la rémunération effectivement versée par LGM Immobilier à Damien ROYEZ au titre de la transaction concernée. La prime est réglée par Damien ROYEZ par virement bancaire ou carte cadeau dans un délai maximum de 10 jours suivant ce versement, sous réserve des conditions du programme.</p>
+  <details><summary><strong>Confidentialité & données personnelles</strong></summary>
+    <p>Les coordonnées renseignées servent à gérer le compte apporteur, les recommandations, leur suivi et les rémunérations. Lorsqu’une recommandation concerne un tiers, l’apporteur confirme l’avoir informé de la transmission de ses coordonnées à Damien ROYEZ dans le cadre de son projet immobilier.</p>
+  </details>
+  <p class="muted" style="font-size:12px">Version V13 · L’attestation/carte de collaborateur sera ajoutée après sa délivrance. Les textes juridiques définitifs pourront être complétés ou ajustés avant diffusion large.</p>
+</section>
+
 </main>
 <footer>
-  <strong>Damien ROYEZ · LGM Immobilier</strong><br>
+  <strong>Damien ROYEZ · Entrepreneur individuel</strong><br>Conseiller immobilier · RSAC Montpellier 908 588 726 · SIRET 908 588 726 00012<br>
   07.78.25.30.65 · damien.royez@lgm-immobilier.fr<br>
   <span style="font-size:12px">Parce que chaque projet est unique.</span>
 </footer>
@@ -349,13 +387,19 @@ const labels = {
 };
 function message(t, err=false){ $('msg').textContent=t; $('msg').className='notice'+(err?' error':''); }
 function clearMessage(){ $('msg').className='notice hidden'; }
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 
 $('signup').onclick=async()=>{
  clearMessage();
+ const first=$('firstName').value.trim(), last=$('lastName').value.trim(), phone=$('signupPhone').value.trim();
+ const address=$('signupAddress').value.trim(), postal=$('signupPostalCode').value.trim(), city=$('signupCity').value.trim();
+ if(!first||!last||!phone||!address||!postal||!city) return message('Merci de compléter toutes vos coordonnées.',true);
+ if(!$('signupTerms').checked) return message('Vous devez accepter les conditions du programme, les CGU et la politique de confidentialité.',true);
  const {data,error}=await supabase.auth.signUp({
    email:$('email').value.trim(), password:$('password').value,
-   options:{data:{first_name:$('firstName').value.trim(),last_name:$('lastName').value.trim(),phone:$('signupPhone')?.value.trim()||''}}
+   options:{data:{first_name:first,last_name:last,phone,address,postal_code:postal,city,
+     terms_version:'v13-2026-09-22',terms_accepted:'true'}}
  });
  if(error) return message(error.message,true);
  message(data.session ? 'Compte créé et connecté.' : 'Compte créé. Vérifiez votre email pour confirmer votre inscription.');
@@ -390,7 +434,7 @@ async function boot(){
    $('adminPanel').classList.remove('hidden');
    await loadAdmin(); await loadReferrers();
  }
- $('profileInfo').innerHTML = profile ? `<strong>${profile.first_name||''} ${profile.last_name||''}</strong><br>${profile.email||session.user.email||''}<br>${profile.phone||''}` : session.user.email;
+ $('profileInfo').innerHTML = profile ? `<strong>${esc(profile.first_name)} ${esc(profile.last_name)}</strong><br>${esc(profile.email||session.user.email||'')}<br>${esc(profile.phone||'')}<br>${esc(profile.address||'')}<br>${esc(profile.postal_code||'')} ${esc(profile.city||'')}` : esc(session.user.email);
  await loadReferrals(); await loadNotifications(); await loadEarnings();
 }
 
@@ -414,7 +458,7 @@ $('referralForm').onsubmit=async e=>{
    referrer_id:user.id, lead_first_name:$('leadFirst').value.trim(), lead_last_name:$('leadLast').value.trim(),
    lead_phone:$('leadPhone').value.trim(), lead_email:$('leadEmail').value.trim()||null, commune:$('commune').value.trim(),
    project_type:$('projectType').value, property_type:$('propertyType').value.trim()||null,
-   relationship:$('relationship').value.trim()||null, notes:$('notes').value.trim()||null, status:'new'
+   relationship:$('relationship').value.trim()||null, notes:$('notes').value.trim()||null, status:'new', consent_confirmed_at:new Date().toISOString(), consent_source:'account'
  };
  const {error}=await supabase.from('referrals').insert(payload);
  if(error) return message('Envoi impossible : '+error.message,true);
@@ -438,7 +482,7 @@ async function loadEarnings(){
  $('moneyPending').textContent=sum('pending').toLocaleString('fr-FR')+' €';
  $('moneyValidated').textContent=sum('validated').toLocaleString('fr-FR')+' €';
  $('moneyPaid').textContent=sum('paid').toLocaleString('fr-FR')+' €';
- $('earningsList').innerHTML=rows.map(x=>`<div class="payitem"><div class="row space"><strong>${x.referrals?.lead_first_name||'Projet'} ${x.referrals?.lead_last_name||''}</strong><span class="paybadge">${x.status==='paid'?'Payée':x.status==='validated'?'Validée':x.status==='cancelled'?'Annulée':'En cours'}</span></div><div class="muted">${x.referrals?.commune||''}</div><div style="font-size:22px;font-weight:800;margin-top:7px">${Number(x.amount||x.promised_amount||0).toLocaleString('fr-FR')} €</div>${x.sale_acted_at?`<small>Vente actée le ${new Date(x.sale_acted_at).toLocaleDateString('fr-FR')}</small>`:''}</div>`).join('')||'<p class="muted">Aucune rémunération enregistrée pour le moment.</p>';
+ $('earningsList').innerHTML=rows.map(x=>`<div class="payitem"><div class="row space"><strong>${x.referrals?.lead_first_name||'Projet'} ${x.referrals?.lead_last_name||''}</strong><span class="paybadge">${x.status==='paid'?'Payée':x.status==='validated'?'Validée':x.status==='cancelled'?'Annulée':'En cours'}</span></div><div class="muted">${x.referrals?.commune||''}</div><div style="font-size:22px;font-weight:800;margin-top:7px">${Number(x.amount||x.promised_amount||0).toLocaleString('fr-FR')} €</div>${x.payment_method?`<small>${x.payment_method==='bank_transfer'?'Virement bancaire':'Carte cadeau'}</small>`:''}${x.due_at?`<small> · Échéance : ${new Date(x.due_at).toLocaleDateString('fr-FR')}</small>`:''}</div>`).join('')||'<p class="muted">Aucune rémunération enregistrée pour le moment.</p>';
 }
 
 
@@ -503,12 +547,12 @@ function renderAdminRows(){
  const refs=adminFilteredRows();
  const table=refs.map(r=>{
    const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
-   return `<tr><td><strong>${r.lead_first_name||''} ${r.lead_last_name||''}</strong><br><span class="muted">${r.lead_phone||''}</span></td><td>${r.commune||''}</td><td>${ap.first_name||''} ${ap.last_name||''}</td><td><select data-status="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select></td><td><input data-amount="${r.id}" type="number" min="0" max="1000" value="${rem?.amount??''}" style="width:90px"></td><td><select data-paystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>En cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Validée</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Payée</option><option value="cancelled" ${rem?.status==='cancelled'?'selected':''}>Annulée</option></select></td><td><button class="primary adminSave" data-id="${r.id}">Enregistrer</button></td></tr>`;
+   return `<tr><td><strong>${r.lead_first_name||''} ${r.lead_last_name||''}</strong><br><span class="muted">${r.lead_phone||''}</span></td><td>${r.commune||''}</td><td>${ap.first_name||''} ${ap.last_name||''}</td><td><select data-status="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select></td><td><input data-amount="${r.id}" type="number" min="0" step="0.01" value="${rem?.lgm_received_amount??''}" style="width:110px" placeholder="€ reçus"></td><td><strong>${Number(rem?.amount||0).toLocaleString('fr-FR')} €</strong></td><td><select data-paystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>En cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Validée</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Payée</option><option value="cancelled" ${rem?.status==='cancelled'?'selected':''}>Annulée</option></select><select data-method="${r.id}" style="margin-top:5px"><option value="">Mode</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></td><td><button class="primary adminSave" data-id="${r.id}">Enregistrer</button></td></tr>`;
  }).join('');
  $('adminRows').innerHTML=table||'<tr><td colspan="7" class="muted">Aucune recommandation.</td></tr>';
  $('adminMobileRows').innerHTML=refs.map(r=>{
    const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
-   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" max="1000" placeholder="€" value="${rem?.amount??''}"></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
+   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
  }).join('')||'<p class="muted">Aucune recommandation.</p>';
  document.querySelectorAll('.adminSave').forEach(b=>b.onclick=()=>saveAdminReferral(b.dataset.id));
  document.querySelectorAll('.mobileSave').forEach(b=>b.onclick=async()=>{
@@ -536,21 +580,23 @@ async function loadAdmin(){
 }
 async function saveAdminReferral(id){
   const status=document.querySelector(`[data-status="${id}"]`).value;
-  const amount=document.querySelector(`[data-amount="${id}"]`).value;
+  const lgmAmount=document.querySelector(`[data-amount="${id}"]`).value;
   const paystatus=document.querySelector(`[data-paystatus="${id}"]`).value;
+  const method=document.querySelector(`[data-method="${id}"]`)?.value||null;
   const {error}=await supabase.from('referrals').update({status}).eq('id',id);
   if(error) return message('Modification impossible : '+error.message,true);
-  if(amount!==''){
-    const {data:existing}=await supabase.from('remunerations').select('id').eq('referral_id',id).maybeSingle();
-    if(existing){
-      await supabase.from('remunerations').update({amount:Number(amount),status:paystatus,sale_acted_at:['sold','validated','pending','paid'].includes(status)?new Date().toISOString():null,validated_at:paystatus==='validated'?new Date().toISOString():null}).eq('id',existing.id);
-    } else {
-      await supabase.from('remunerations').insert({referral_id:id,amount:Number(amount),promised_amount:Number(amount),status:paystatus,sale_acted_at:['sold','validated','pending','paid'].includes(status)?new Date().toISOString():null,validated_at:paystatus==='validated'?new Date().toISOString():null});
-    }
+  if(lgmAmount!==''){
+    const {data:existing}=await supabase.from('remunerations').select('id,lgm_paid_at').eq('referral_id',id).maybeSingle();
+    const patch={lgm_received_amount:Number(lgmAmount),status:paystatus,payment_method:method,
+      validated_at:paystatus==='validated'?new Date().toISOString():null};
+    if(['validated','pending','paid'].includes(paystatus) && !existing?.lgm_paid_at) patch.lgm_paid_at=new Date().toISOString();
+    if(existing) await supabase.from('remunerations').update(patch).eq('id',existing.id);
+    else await supabase.from('remunerations').insert({referral_id:id,...patch});
   }
-  message('Recommandation mise à jour.');
+  message('Recommandation mise à jour. La prime apporteur est calculée automatiquement.');
   await loadAdmin(); await loadReferrals(); await loadEarnings();
 }
+
 $('adminRefresh').onclick=loadAdmin;
 $('adminSearch').oninput=renderAdminRows;
 document.querySelectorAll('.filterbtn').forEach(b=>b.onclick=()=>{
@@ -565,17 +611,22 @@ async function setupOnboarding(profile,user){
  if(!user || profile?.role==='admin') return;
  $('onboardingBox').classList.remove('hidden');
  $('profilePhone').value=profile?.phone||'';
- const hasPhone=!!profile?.phone, hasCode=!!profile?.referral_code;
- const pct=hasPhone&&hasCode?100:hasPhone||hasCode?66:33;
- $('onboardBar').style.width=pct+'%';
- $('onboardHint').textContent=pct===100?'Profil prêt ✓ Votre lien et votre QR code sont disponibles juste en dessous.':'Ajoutez votre téléphone pour terminer votre profil.';
+ $('profileAddress').value=profile?.address||'';
+ $('profilePostalCode').value=profile?.postal_code||'';
+ $('profileCity').value=profile?.city||'';
+ const complete=!!(profile?.phone&&profile?.address&&profile?.postal_code&&profile?.city&&profile?.referral_code);
+ $('onboardBar').style.width=complete?'100%':'60%';
+ $('onboardHint').textContent=complete?'Profil prêt ✓ Votre lien et votre QR code sont disponibles juste en dessous.':'Complétez vos coordonnées obligatoires pour finaliser votre profil.';
  $('saveProfile').onclick=async()=>{
-   const phone=$('profilePhone').value.trim();
-   if(!phone) return message('Renseignez votre numéro de téléphone.',true);
-   const {error}=await supabase.from('profiles').update({phone}).eq('id',user.id);
+   const phone=$('profilePhone').value.trim(), address=$('profileAddress').value.trim();
+   const postal_code=$('profilePostalCode').value.trim(), city=$('profileCity').value.trim();
+   if(!phone||!address||!postal_code||!city) return message('Merci de compléter téléphone, adresse, code postal et ville.',true);
+   const {error}=await supabase.from('profiles').update({phone,address,postal_code,city}).eq('id',user.id);
    if(error) return message('Impossible de mettre à jour le profil.',true);
    $('onboardBar').style.width='100%'; $('onboardHint').textContent='Profil prêt ✓ Votre lien et votre QR code sont disponibles juste en dessous.';
    message('Profil enregistré.');
+   const {data:p}=await supabase.from('profiles').select('*').eq('id',user.id).single();
+   if(p) $('profileInfo').innerHTML=`<strong>${esc(p.first_name)} ${esc(p.last_name)}</strong><br>${esc(p.email||user.email||'')}<br>${esc(p.phone||'')}<br>${esc(p.address||'')}<br>${esc(p.postal_code||'')} ${esc(p.city||'')}`;
  };
 }
 
