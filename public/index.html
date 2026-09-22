@@ -143,6 +143,7 @@
 .legal-scale span{background:#f5f6f8;border-radius:10px;padding:10px}.grid label{display:flex;flex-direction:column;gap:6px}
 @media(max-width:650px){.legal-scale{grid-template-columns:1fr}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <header>
@@ -405,12 +406,24 @@ $('signup').onclick=async()=>{
  message(data.session ? 'Compte créé et connecté.' : 'Compte créé. Vérifiez votre email pour confirmer votre inscription.');
  if(data.session) await boot();
 };
-$('login').onclick=async()=>{
+$('login').addEventListener('click', async (ev)=>{
+ ev.preventDefault();
  clearMessage();
- const {error}=await supabase.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
- if(error) return message(error.message,true);
- await boot();
-};
+ const btn=$('login');
+ const email=$('email').value.trim(), password=$('password').value;
+ if(!email||!password) return message('Renseignez votre e-mail et votre mot de passe.',true);
+ btn.disabled=true; const oldText=btn.textContent; btn.textContent='Connexion…';
+ try{
+   const {error}=await supabase.auth.signInWithPassword({email,password});
+   if(error) return message('Connexion impossible : '+error.message,true);
+   await boot();
+ }catch(err){
+   console.error('LOGIN_ERROR',err);
+   message('Une erreur technique empêche la connexion. Rechargez la page puis réessayez.',true);
+ }finally{
+   btn.disabled=false; btn.textContent=oldText;
+ }
+});
 $('logout').onclick=async()=>{await supabase.auth.signOut(); location.reload()};
 $('refresh').onclick=()=>loadReferrals();
 
@@ -596,6 +609,61 @@ async function saveAdminReferral(id){
   message('Recommandation mise à jour. La prime apporteur est calculée automatiquement.');
   await loadAdmin(); await loadReferrals(); await loadEarnings();
 }
+
+
+function excelDate(v){return v?new Date(v).toLocaleDateString('fr-FR'):''}
+function saveXlsx(sheets,filename){
+ if(!window.XLSX) return message('Le module Excel n’a pas pu être chargé. Vérifiez votre connexion internet.',true);
+ const wb=XLSX.utils.book_new();
+ for(const [name,rows] of Object.entries(sheets)){
+   const ws=XLSX.utils.json_to_sheet(rows);
+   XLSX.utils.book_append_sheet(wb,ws,name.slice(0,31));
+ }
+ XLSX.writeFile(wb,filename);
+}
+async function exportAdminContacts(){
+ try{
+   const [{data:profiles,error:pe},{data:refs,error:re}]=await Promise.all([
+     supabase.from('profiles').select('id,role,first_name,last_name,email,phone,address,postal_code,city,created_at').order('created_at',{ascending:false}),
+     supabase.from('referrals').select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,status,created_at').order('created_at',{ascending:false})
+   ]);
+   if(pe||re) throw pe||re;
+   const pmap=Object.fromEntries((profiles||[]).map(p=>[p.id,p]));
+   const apporteurs=(profiles||[]).filter(p=>p.role==='referrer').map(p=>({
+     'Prénom':p.first_name||'','Nom':p.last_name||'','Téléphone':p.phone||'','E-mail':p.email||'',
+     'Adresse':p.address||'','Code postal':p.postal_code||'','Ville':p.city||'','Inscription':excelDate(p.created_at)
+   }));
+   const recommandations=(refs||[]).map(r=>{
+     const a=pmap[r.referrer_id]||{};
+     return {'Prénom':r.lead_first_name||'','Nom':r.lead_last_name||'','Téléphone':r.lead_phone||'','E-mail':r.lead_email||'',
+       'Commune':r.commune||'','Projet':r.project_type||'','Type de bien':r.property_type||'','Lien':r.relationship||'',
+       'Statut':r.status||'','Apporteur':`${a.first_name||''} ${a.last_name||''}`.trim(),'Date':excelDate(r.created_at)};
+   });
+   saveXlsx({'Apporteurs':apporteurs,'Recommandations':recommandations},`contacts-damien-recommandations-${new Date().toISOString().slice(0,10)}.xlsx`);
+ }catch(err){console.error(err);message('Export impossible : '+(err.message||'erreur inconnue'),true)}
+}
+async function exportAdminRemunerations(){
+ try{
+   const {data,error}=await supabase.from('remunerations').select('*,referrals(lead_first_name,lead_last_name,referrer_id)').order('created_at',{ascending:false});
+   if(error) throw error;
+   const ids=[...new Set((data||[]).map(x=>x.referrals?.referrer_id).filter(Boolean))];
+   let pmap={};
+   if(ids.length){
+     const {data:ps}=await supabase.from('profiles').select('id,first_name,last_name').in('id',ids);
+     pmap=Object.fromEntries((ps||[]).map(p=>[p.id,p]));
+   }
+   const rows=(data||[]).map(x=>{
+     const p=pmap[x.referrals?.referrer_id]||{};
+     return {'Contact recommandé':`${x.referrals?.lead_first_name||''} ${x.referrals?.lead_last_name||''}`.trim(),
+       'Apporteur':`${p.first_name||''} ${p.last_name||''}`.trim(),'Rémunération LGM reçue (€)':Number(x.lgm_received_amount||0),
+       'Prime apporteur (€)':Number(x.amount||0),'Mode':x.payment_method==='bank_transfer'?'Virement':x.payment_method==='gift_card'?'Carte cadeau':'',
+       'Statut':x.status||'','Date versement LGM':excelDate(x.lgm_paid_at),'Échéance J+10':excelDate(x.due_at),'Création':excelDate(x.created_at)};
+   });
+   saveXlsx({'Rémunérations':rows},`remunerations-damien-${new Date().toISOString().slice(0,10)}.xlsx`);
+ }catch(err){console.error(err);message('Export impossible : '+(err.message||'erreur inconnue'),true)}
+}
+$('exportContacts')?.addEventListener('click',exportAdminContacts);
+$('exportRemunerations')?.addEventListener('click',exportAdminRemunerations);
 
 $('adminRefresh').onclick=loadAdmin;
 $('adminSearch').oninput=renderAdminRows;
