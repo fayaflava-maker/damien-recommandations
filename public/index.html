@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <link rel="manifest" href="/manifest.webmanifest">
+  <title>Damien Recommandations</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f5f6f8;color:#111827}
+    header{background:#111827;color:white;padding:20px} .wrap{max-width:980px;margin:auto;padding:20px}
+    .brand{font-size:24px;font-weight:800} .sub{opacity:.75;margin-top:4px}
+    .card{background:white;border-radius:20px;padding:22px;margin:18px 0;box-shadow:0 8px 30px rgba(0,0,0,.06)}
+    .hero{background:linear-gradient(135deg,#111827,#374151);color:white} h1{margin:0 0 10px;font-size:32px}
+    h2{margin-top:0} .gold{color:#e9bd55} .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    input,select,textarea{width:100%;padding:14px;border:1px solid #d7dbe1;border-radius:12px;font:inherit;margin:6px 0 12px;background:white}
+    textarea{min-height:100px} button{border:0;border-radius:12px;padding:13px 18px;font-weight:750;cursor:pointer}
+    .primary{background:#111827;color:white} .light{background:#eef0f3;color:#111827} .danger{background:#fee2e2;color:#991b1b}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap} .space{justify-content:space-between}
+    .muted{color:#6b7280} .hidden{display:none!important} .status{font-size:13px;padding:6px 9px;background:#eef0f3;border-radius:999px}
+    .ref{border-top:1px solid #eceef1;padding:15px 0} .ref:first-child{border-top:0}
+    .notice{padding:12px;border-radius:12px;background:#fff7dc;margin:12px 0} .error{background:#fee2e2;color:#991b1b}
+    label.check{display:flex;gap:10px;align-items:flex-start} label.check input{width:auto;margin-top:4px}
+    footer{text-align:center;color:#6b7280;padding:30px 15px} @media(max-width:650px){.grid{grid-template-columns:1fr}h1{font-size:27px}}
+  
+    .admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{background:#f8fafc;border:1px solid #e5e7eb;border-radius:16px;padding:16px}
+    .kpi b{display:block;font-size:28px;margin-top:5px}
+    .admin-table{width:100%;border-collapse:collapse;margin-top:12px}
+    .admin-table th,.admin-table td{text-align:left;padding:11px 8px;border-bottom:1px solid #e5e7eb;font-size:14px}
+    .admin-actions select,.admin-actions input{margin:3px 0;padding:8px;font-size:13px}
+    @media(max-width:700px){.admin-grid{grid-template-columns:repeat(2,1fr)}.admin-table{display:block;overflow-x:auto;white-space:nowrap}}
+  
+    :root{--navy:#0b1930;--green:#55a83b;--pink:#d83878;--soft:#f5f8f6}
+    body{background:linear-gradient(180deg,#f7f9fb 0%,#f2f6f3 100%)}
+    header{background:linear-gradient(135deg,#071426,#13243d)}
+    .brandline{display:flex;align-items:center;gap:12px}
+    .lgm-mini{font-family:Georgia,serif;font-weight:800;color:#55a83b;font-size:25px}
+    .lgm-mini span{display:block;color:white;font-family:system-ui;font-size:10px;letter-spacing:1.5px}
+    .premium-hero{position:relative;overflow:hidden;padding:0!important;background:linear-gradient(135deg,#fff,#edf7ef)!important;color:var(--navy)!important}
+    .premium-hero-inner{display:grid;grid-template-columns:1.05fr .95fr;min-height:430px}
+    .premium-copy{padding:38px 36px;align-self:center;z-index:2}
+    .premium-copy .eyebrow{display:inline-block;background:var(--pink);color:white;padding:7px 12px;border-radius:999px;font-weight:800;font-size:13px;letter-spacing:.8px}
+    .premium-copy h1{font-size:44px;line-height:1.02;margin:14px 0 16px;color:var(--navy)}
+    .premium-copy h1 em{font-family:Georgia,serif;color:var(--green);font-weight:500}
+    .premium-copy .reward{font-size:21px;font-weight:800;margin:18px 0}.premium-copy .reward b{color:var(--pink)}
+    .portrait-wrap{position:relative;min-height:430px;background:linear-gradient(160deg,#dff3ff,#dfeede)}
+    .portrait-wrap img{width:100%;height:100%;object-fit:cover;object-position:center 25%;position:absolute;inset:0}
+    .portrait-badge{position:absolute;right:18px;bottom:18px;background:rgba(7,20,38,.9);color:white;padding:13px 16px;border-radius:14px;backdrop-filter:blur(5px)}
+    .portrait-badge strong{display:block;font-size:17px}.portrait-badge span{font-size:12px;opacity:.85}
+    .cta-pink{background:var(--pink)!important;color:#fff!important}
+    .trustline{display:flex;gap:12px;flex-wrap:wrap;margin-top:15px;color:#536071;font-size:13px}
+    .trustline span{background:#fff;border:1px solid #e5e7eb;padding:7px 10px;border-radius:999px}
+    #mainNav .wrap{max-width:1100px}
+    #mainNav button{white-space:nowrap}
+    .card{border:1px solid rgba(11,25,48,.04)}
+    @media(max-width:700px){
+      .premium-hero-inner{grid-template-columns:1fr;min-height:auto}
+      .premium-copy{padding:28px 24px 24px}.premium-copy h1{font-size:36px}
+      .portrait-wrap{min-height:360px}.portrait-wrap img{object-position:center 22%}
+      .portrait-badge{left:18px;right:auto}
+      #mainNav .wrap{padding-left:12px;padding-right:12px}
+    }
+  
+    .timeline{display:flex;gap:0;overflow-x:auto;padding:14px 2px 8px}
+    .step{min-width:120px;text-align:center;position:relative;font-size:11px;color:#8a94a3;padding-top:32px}
+    .step:before{content:'';position:absolute;top:11px;left:0;right:0;height:3px;background:#e5e7eb}
+    .step:first-child:before{left:50%}.step:last-child:before{right:50%}
+    .step i{position:absolute;top:0;left:50%;transform:translateX(-50%);width:25px;height:25px;border-radius:50%;background:#e5e7eb;border:4px solid white;box-shadow:0 0 0 1px #e5e7eb;z-index:2}
+    .step.done{color:#162238;font-weight:700}.step.done:before,.step.done i{background:#55a83b}
+    .notif{border-left:4px solid #d83878;padding:11px 12px;margin:8px 0;background:#fff7fb;border-radius:0 12px 12px 0}
+    .notif small{color:#7b8491}
+  
+    .money-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+    .money-card{padding:16px;border-radius:16px;background:#f7faf8;border:1px solid #e2e8e4}
+    .money-card b{display:block;font-size:25px;color:#0b1930;margin-top:4px}
+    .payitem{padding:15px 0;border-bottom:1px solid #e5e7eb}.payitem:last-child{border-bottom:0}
+    .paybadge{display:inline-block;padding:5px 9px;border-radius:999px;background:#eef7ea;color:#317226;font-size:12px;font-weight:800}
+    @media(max-width:650px){.money-grid{grid-template-columns:1fr}}
+  
+    .referrer-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
+    .referrer-card{border:1px solid #e5e7eb;border-radius:18px;padding:17px;background:white}
+    .referrer-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .avatar{width:42px;height:42px;border-radius:50%;background:#edf7ea;display:grid;place-items:center;font-weight:900;color:#34752a;flex:none}
+    .referrer-name{font-weight:850;font-size:17px}.referrer-contact{font-size:12px;color:#77808d;margin-top:3px}
+    .mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px}
+    .mini-stat{background:#f7f9fb;border-radius:11px;padding:9px 6px;text-align:center;font-size:10px;color:#737d8b}
+    .mini-stat b{display:block;color:#0b1930;font-size:17px}
+    .finance-line{display:flex;justify-content:space-between;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid #edf0f2;font-size:12px}
+    .finance-line strong{color:#0b1930}
+    .searchbox{width:100%;max-width:390px}
+    @media(max-width:750px){.referrer-grid{grid-template-columns:1fr}.mini-stats{grid-template-columns:repeat(2,1fr)}}
+  
+    .sharebox{background:linear-gradient(135deg,#0b1930,#172b47);color:white;border-radius:20px;padding:22px;margin-top:18px}
+    .shareurl{background:rgba(255,255,255,.1);padding:11px;border-radius:10px;word-break:break-all;font-size:12px;margin:10px 0}
+    .qrbox{background:white;border-radius:16px;padding:12px;width:180px;height:180px;display:grid;place-items:center;margin:14px 0}
+    .qrbox img{width:156px;height:156px;display:block;object-fit:contain}
+  
+    .onboard{background:linear-gradient(135deg,#f7fbf5,#fff);border:1px solid #dfeadd;border-radius:20px;padding:20px;margin:18px 0}
+    .onboard-progress{height:8px;background:#e8ece9;border-radius:99px;overflow:hidden;margin:10px 0 18px}
+    .onboard-progress span{display:block;height:100%;background:#55a83b;border-radius:99px;transition:.3s}
+    .welcome{font-family:Georgia,serif;font-size:26px;color:#0b1930;margin:0 0 5px}
+  
+    .admin-hero{background:linear-gradient(135deg,#0b1930,#1b3655);color:#fff;border-radius:22px;padding:24px;margin-bottom:18px;overflow:hidden;position:relative}
+    .admin-hero h2{font-size:30px;margin:4px 0 6px}.admin-hero p{opacity:.85;margin:0 0 18px}
+    .refresh-panel{display:flex;gap:14px;align-items:stretch;flex-wrap:wrap}
+    .refresh-big{flex:1;min-width:240px;background:linear-gradient(135deg,#d83878,#e34b87)!important;color:#fff!important;text-align:left;padding:17px 18px!important;border-radius:16px!important;font-size:17px!important}
+    .refresh-big small{display:block;font-weight:500;opacity:.9;margin-top:4px}
+    .refresh-state{min-width:210px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);padding:15px 17px;border-radius:16px;display:flex;flex-direction:column;justify-content:center}
+    .refresh-state b{font-size:13px}.refresh-state span{font-size:12px;opacity:.8;margin-top:4px}
+    .admin-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0 22px}
+    .admin-kpi{background:#fff;border:1px solid #e7ebef;border-radius:18px;padding:17px;box-shadow:0 5px 20px rgba(11,25,48,.04)}
+    .admin-kpi span{font-size:13px;color:#687385}.admin-kpi b{display:block;font-size:29px;color:#0b1930;margin-top:5px}
+    .admin-tools{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin:15px 0}
+    .admin-search{max-width:380px;min-width:220px;flex:1}
+    .filters{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px}
+    .filterbtn{white-space:nowrap;padding:8px 11px!important;font-size:12px!important}
+    .filterbtn.active{background:#0b1930!important;color:#fff!important}
+    .mobile-ref-list{display:none}
+    .mobile-ref-card{border:1px solid #e6e9ed;border-radius:16px;padding:15px;margin:10px 0;background:#fff}
+    .mobile-ref-card .top{display:flex;justify-content:space-between;gap:8px}.mobile-ref-card .name{font-weight:850}
+    .mobile-ref-card .meta{font-size:12px;color:#707a88;margin:4px 0 12px}
+    .mobile-ref-card .controls{display:grid;grid-template-columns:1fr 100px;gap:8px}
+    @media(max-width:760px){
+      .admin-hero{padding:20px 17px}.admin-hero h2{font-size:27px}.refresh-state{width:100%;min-width:0}
+      .admin-kpis{grid-template-columns:repeat(2,1fr)}.admin-kpi{padding:14px}.admin-kpi b{font-size:26px}
+      #adminTableWrap{display:none}.mobile-ref-list{display:block}.admin-search{max-width:none;width:100%}
+    }
+  
+    .leader-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0}
+    .leader-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+    .leader-summary>div{background:#f7f9fb;border-radius:14px;padding:13px}.leader-summary span{font-size:11px;color:#737d8b}.leader-summary b{display:block;font-size:22px;margin-top:3px}
+    .rank{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#0b1930;color:#fff;font-weight:900;flex:none}
+    .tier{display:inline-block;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:850;background:#eef2f6;color:#0b1930}
+    .tier.gold{background:#fff4d7;color:#805d00}.tier.silver{background:#eef1f4;color:#52606d}.tier.bronze{background:#f8e8df;color:#8a4b2a}
+    .leader-card{display:grid;grid-template-columns:42px 1.3fr repeat(4,.7fr);gap:10px;align-items:center;border-bottom:1px solid #edf0f2;padding:13px 5px}
+    .leader-card small{display:block;color:#7a8491}.leader-card .metric{text-align:center}.leader-card .metric b{display:block;font-size:17px}
+    @media(max-width:700px){.leader-card{grid-template-columns:38px 1fr 1fr}.leader-card .metric:nth-of-type(n+3){display:none}.leader-summary{grid-template-columns:1fr 1fr}.leader-summary>div:last-child{grid-column:1/-1}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding:0">
+    <div class="brandline">
+      <div class="lgm-mini">LGM<span>IMMOBILIER</span></div>
+      <div><div class="brand">Damien Royez</div><div class="sub">Votre conseiller immobilier · Pic Saint-Loup</div></div>
+    </div>
+  </div>
+</header>
+<nav id="mainNav" class="hidden" style="position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #e5e7eb">
+  <div class="wrap row" style="padding-top:10px;padding-bottom:10px;overflow-x:auto;flex-wrap:nowrap">
+    <button class="light navbtn" data-target="home">Accueil</button>
+    <button class="primary navbtn" data-target="recommend">Faire une recommandation</button>
+    <button class="light navbtn" data-target="tracking">Mon suivi</button>
+    <button class="light navbtn" data-target="earnings">Mes rémunérations</button>
+    <button class="light navbtn" data-target="profile">Mon profil</button><button class="light navbtn" data-target="notificationsPanel">🔔 Notifications <span id="notifCount"></span></button>
+<button id="referrersNav" class="light navbtn hidden" data-target="referrersPanel">Mes apporteurs</button>
+<button id="adminNav" class="light navbtn hidden" data-target="adminPanel">Tableau de bord</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section id="publicReferral" class="card hidden">
+  <span style="display:inline-block;background:#d83878;color:#fff;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:800">RECOMMANDATION</span>
+  <h1>Vous connaissez un propriétaire qui souhaite vendre ?</h1>
+  <p id="recommendedBy" class="muted">Transmettez-moi ses coordonnées. Je prends le relais et l’accompagne de A à Z.</p>
+  <form id="publicReferralForm">
+    <div class="grid">
+      <label>Prénom *<input id="pubFirst" required></label><label>Nom *<input id="pubLast" required></label>
+      <label>Téléphone *<input id="pubPhone" type="tel" required></label><label>Email<input id="pubEmail" type="email"></label>
+      <label>Commune<input id="pubCommune"></label><label>Projet<select id="pubProject"><option value="sale">Vente</option><option value="valuation">Estimation</option><option value="advice">Conseils</option><option value="other">Autre</option></select></label>
+      <label>Type de bien<input id="pubProperty" placeholder="Maison, appartement, terrain…"></label><label>Votre lien avec cette personne<input id="pubRelation" placeholder="Ami, voisin, famille…"></label>
+    </div>
+    <label>Informations complémentaires<textarea id="pubNotes" rows="3"></textarea></label>
+    <label class="check"><input id="pubConsent" type="checkbox" required><span>Je confirme avoir informé cette personne que ses coordonnées seront transmises à Damien Royez dans le cadre de son projet immobilier.</span></label>
+    <button class="cta-pink" type="submit" style="margin-top:14px">Envoyer la recommandation</button>
+  </form>
+  <div id="publicSuccess" class="hidden" style="padding:22px;background:#eef8eb;border-radius:16px;margin-top:16px"><strong>Merci ! ✓</strong><br>La recommandation a bien été transmise à Damien Royez.</div>
+</section>
+<section id="home" class="card premium-hero">
+  <div class="premium-hero-inner">
+    <div class="premium-copy">
+      <span class="eyebrow">APPORTEURS D’AFFAIRES</span>
+      <h1>Recommandez,<br>gagnez,<br><em>c’est simple !</em></h1>
+      <p>Vous connaissez quelqu’un qui souhaite vendre son bien immobilier ? Parlez-m’en.</p>
+      <div class="reward">Je vous rémunère <b>jusqu’à 1 000 €</b></div>
+      <p class="muted" style="font-size:13px">Rémunération versée après que la vente soit actée chez le notaire.</p>
+      <button class="cta-pink" id="heroRecommend">Faire une recommandation</button>
+      <div class="trustline"><span>✓ Simple</span><span>✓ Suivi en temps réel</span><span>✓ Transparent</span></div>
+    </div>
+    <div class="portrait-wrap">
+      <img src="/damien-royez.jpg" alt="Damien Royez">
+      <div class="portrait-badge"><strong>Damien ROYEZ</strong><span>Conseiller de proximité · Pic Saint-Loup</span></div>
+    </div>
+  </div>
+</section>
+
+  <div id="msg" class="notice hidden"></div>
+
+  <section id="auth" class="card">
+    <h2>Connexion</h2>
+    <div class="grid">
+      <div><label>Email</label><input id="email" type="email" autocomplete="email" placeholder="votre@email.fr"></div>
+      <div><label>Mot de passe</label><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    </div>
+    <div class="row">
+      <button class="primary" id="login">Se connecter</button>
+      <button class="light" id="showSignup">Créer mon compte</button>
+    </div>
+    <div id="signupFields" class="hidden" style="margin-top:15px">
+      <div class="grid">
+        <input id="firstName" placeholder="Prénom"><input id="lastName" placeholder="Nom"><input id="signupPhone" type="tel" placeholder="Téléphone">
+      </div>
+      <button class="primary" id="signup">Créer le compte</button>
+    </div>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="card row space">
+      <div><strong id="welcome">Mon espace</strong><div id="role" class="muted"></div></div>
+      <button class="light" id="logout">Déconnexion</button>
+    </div>
+
+    <section id="recommend" class="card">
+      <h2>Faire une recommandation</h2>
+      <form id="referralForm">
+        <div class="grid">
+          <input id="leadFirst" required placeholder="Prénom du contact">
+          <input id="leadLast" required placeholder="Nom du contact">
+          <input id="leadPhone" required placeholder="Téléphone">
+          <input id="leadEmail" type="email" placeholder="Email">
+          <input id="commune" required placeholder="Commune">
+          <select id="projectType"><option value="sale">Vente</option><option value="valuation">Estimation</option><option value="advice">Conseils</option><option value="other">Autre</option></select>
+          <input id="propertyType" placeholder="Type de bien">
+          <input id="relationship" placeholder="Votre lien avec cette personne">
+        </div>
+        <textarea id="notes" placeholder="Informations utiles"></textarea>
+        <label class="check"><input id="consent" type="checkbox" required><span>Je confirme avoir informé cette personne que ses coordonnées seront transmises à Damien Royez dans le cadre de son projet immobilier.</span></label>
+        <div style="margin-top:15px"><button class="primary" type="submit">Envoyer ma recommandation</button></div>
+      </form>
+    </section>
+
+    <section id="tracking" class="card">
+      <div class="row space"><h2 style="margin:0">Mon suivi</h2><button class="light" id="refresh">Actualiser</button></div>
+      <div id="referrals" style="margin-top:10px"></div>
+    </section>
+
+    <section id="earnings" class="card">
+      <h2>Mes rémunérations</h2>
+      <p class="muted">Le versement intervient après que la vente soit actée chez le notaire.</p>
+      <div class="money-grid">
+        <div class="money-card">En cours<b id="moneyPending">0 €</b></div>
+        <div class="money-card">Validé<b id="moneyValidated">0 €</b></div>
+        <div class="money-card">Déjà versé<b id="moneyPaid">0 €</b></div>
+      </div>
+      <div id="earningsList"><p class="muted">Aucune rémunération enregistrée pour le moment.</p></div>
+    </section>
+
+    <section id="profile" class="card">
+      <h2>Mon profil</h2>
+      <div id="profileInfo" class="muted">Vos informations de compte apparaîtront ici.</div><div id="onboardingBox" class="onboard hidden">
+        <div class="welcome">Bienvenue dans votre espace 👋</div>
+        <div class="muted">Complétez votre profil pour activer pleinement votre espace apporteur.</div>
+        <div class="onboard-progress"><span id="onboardBar" style="width:33%"></span></div>
+        <label>Téléphone<input id="profilePhone" type="tel" placeholder="06…"></label>
+        <button id="saveProfile" class="primary">Enregistrer mon profil</button>
+        <div id="onboardHint" class="muted" style="margin-top:10px"></div>
+      </div>
+      <div id="shareBox" class="sharebox hidden">
+        <strong style="font-size:20px">Mon lien de recommandation</strong>
+        <p style="opacity:.85">Partagez ce lien ou votre QR code. Les personnes arrivent directement sur Damien Recommandations.</p>
+        <div id="shareUrl" class="shareurl"></div>
+        <div class="qrbox"><img id="shareQr" alt="QR code personnel"></div>
+        <div class="row"><button id="copyShare" class="cta-pink">Copier le lien</button><button id="nativeShare" class="light">Partager</button></div>
+      </div>
+    </section>
+
+    <section id="notificationsPanel" class="card">
+      <div class="row space"><h2 style="margin:0">Notifications</h2><button id="markRead" class="light">Tout marquer comme lu</button></div>
+      <div id="notificationsList" style="margin-top:12px"><p class="muted">Aucune notification.</p></div>
+    </section>
+
+    <section id="referrersPanel" class="card hidden">
+      <div><h2 style="margin:0">Mes apporteurs</h2><div class="muted">Suivi de votre réseau, performances et rémunérations.</div></div>
+      <div class="leader-summary">
+        <div><span>Apporteurs actifs</span><b id="sumReferrers">0</b></div>
+        <div><span>Recommandations reçues</span><b id="sumReferrals">0</b></div>
+        <div><span>Rémunérations versées</span><b id="sumPaid">0 €</b></div>
+      </div>
+      <div class="leader-head">
+        <input id="referrerSearch" class="searchbox" placeholder="Rechercher un apporteur…">
+        <select id="referrerSort" style="max-width:240px"><option value="score">Classement général</option><option value="recommendations">Plus de recommandations</option><option value="sales">Plus de ventes</option><option value="paid">Plus rémunérés</option></select>
+      </div>
+      <div id="referrerCards"><p class="muted">Aucun apporteur.</p></div>
+    </section>
+
+    <section id="adminPanel" class="card hidden">
+      <div class="admin-hero">
+        <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
+        <h2>Bonjour Damien 👋</h2>
+        <p>Suivez simplement vos recommandations, vos mandats et vos rémunérations.</p>
+        <div class="refresh-panel">
+          <button id="adminRefresh" class="refresh-big">↻ &nbsp; Actualiser les données<small>Mettre à jour les statistiques et les recommandations.</small></button>
+          <div class="refresh-state"><b>✓ Données à jour</b><span id="lastRefresh">Dernière mise à jour : maintenant</span></div>
+        </div>
+      </div>
+
+      <div class="admin-kpis">
+        <div class="admin-kpi"><span>Recommandations</span><b id="kpiRefs">0</b></div>
+        <div class="admin-kpi"><span>Mandats / ventes</span><b id="kpiSales">0</b></div>
+        <div class="admin-kpi"><span>À rémunérer</span><b id="kpiPay">0 €</b></div>
+        <div class="admin-kpi"><span>Taux de conversion</span><b id="kpiConversion">0 %</b></div>
+      </div>
+
+      <div>
+        <h2 style="margin-bottom:3px">Toutes les recommandations</h2>
+        <div class="muted">Suivez l’avancement de chaque recommandation.</div>
+        <div class="admin-tools">
+          <div class="filters">
+            <button class="light filterbtn active" data-filter="all">Toutes</button>
+            <button class="light filterbtn" data-filter="new">Nouvelles</button>
+            <button class="light filterbtn" data-filter="progress">En cours</button>
+            <button class="light filterbtn" data-filter="mandate">Mandats</button>
+            <button class="light filterbtn" data-filter="without_follow_up">Sans suite</button>
+          </div>
+          <input id="adminSearch" class="admin-search" placeholder="Rechercher un nom, une commune…">
+        </div>
+        <div id="adminTableWrap" style="overflow-x:auto"><table class="admin-table"><thead><tr><th>Contact</th><th>Commune</th><th>Apporteur</th><th>Statut</th><th>Rémunération</th><th>Paiement</th><th>Action</th></tr></thead><tbody id="adminRows"></tbody></table></div>
+        <div id="adminMobileRows" class="mobile-ref-list"></div>
+      </div>
+    </section>
+  </section>
+</main>
+<footer>
+  <strong>Damien ROYEZ · LGM Immobilier</strong><br>
+  07.78.25.30.65 · damien.royez@lgm-immobilier.fr<br>
+  <span style="font-size:12px">Parce que chaque projet est unique.</span>
+</footer>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const supabase = createClient('https://oyquwmnvrsmldloveuir.supabase.co', 'sb_publishable_3iikYtMXdY3aq0FTptQQuQ_5JAhlBS0');
+const $ = id => document.getElementById(id);
+const labels = {
+ new:'Nouvelle recommandation', to_contact:'À contacter', contacted:'Contact établi',
+ appointment:'Rendez-vous / estimation', confirmed:'Projet confirmé', mandate:'Mandat signé',
+ sold:'Bien vendu', validated:'Rémunération validée', pending:'Paiement en cours',
+ paid:'Paiement effectué', closed:'Clôturé', without_follow_up:'Sans suite'
+};
+function message(t, err=false){ $('msg').textContent=t; $('msg').className='notice'+(err?' error':''); }
+function clearMessage(){ $('msg').className='notice hidden'; }
+$('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
+
+$('signup').onclick=async()=>{
+ clearMessage();
+ const {data,error}=await supabase.auth.signUp({
+   email:$('email').value.trim(), password:$('password').value,
+   options:{data:{first_name:$('firstName').value.trim(),last_name:$('lastName').value.trim(),phone:$('signupPhone')?.value.trim()||''}}
+ });
+ if(error) return message(error.message,true);
+ message(data.session ? 'Compte créé et connecté.' : 'Compte créé. Vérifiez votre email pour confirmer votre inscription.');
+ if(data.session) await boot();
+};
+$('login').onclick=async()=>{
+ clearMessage();
+ const {error}=await supabase.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});
+ if(error) return message(error.message,true);
+ await boot();
+};
+$('logout').onclick=async()=>{await supabase.auth.signOut(); location.reload()};
+$('refresh').onclick=()=>loadReferrals();
+
+async function boot(){
+ if(refCode) return;
+ const {data:{session}}=await supabase.auth.getSession();
+ if(!session) return;
+ $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); $('mainNav').classList.remove('hidden');
+ const user=session.user;
+ const {data:profile}=await supabase.from('profiles').select('*').eq('id',user.id).single();
+ $('welcome').textContent = profile ? `Bonjour ${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Mon espace';
+ $('role').textContent = profile?.role==='admin' ? 'Administration' : 'Apporteur d’affaires';
+ await setupOnboarding(profile,user); await setupShareLink(profile,user); await adminNotificationPulse(profile);
+ if(profile?.role==='admin'){
+   $('adminNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden');
+   // Admin has a dedicated workspace: hide apporteur-facing views.
+   ['home','recommend','tracking','earnings','profile'].forEach(id=>$(id)?.classList.add('hidden'));
+   document.querySelectorAll('.navbtn').forEach(b=>{
+     if(!['adminPanel','referrersPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
+   });
+   $('adminPanel').classList.remove('hidden');
+   await loadAdmin(); await loadReferrers();
+ }
+ $('profileInfo').innerHTML = profile ? `<strong>${profile.first_name||''} ${profile.last_name||''}</strong><br>${profile.email||session.user.email||''}<br>${profile.phone||''}` : session.user.email;
+ await loadReferrals(); await loadNotifications(); await loadEarnings();
+}
+
+async function loadReferrals(){
+ const {data,error}=await supabase.from('referrals').select('*').order('created_at',{ascending:false});
+ if(error) return message('Impossible de charger les recommandations : '+error.message,true);
+ if(!data?.length) return $('referrals').innerHTML='<p class="muted">Aucune recommandation pour le moment.</p>';
+ const flow=['new','to_contact','contacted','appointment','confirmed','mandate','sold','validated','pending','paid'];
+ $('referrals').innerHTML=data.map(r=>{
+   const current=flow.indexOf(r.status);
+   const steps=flow.map((st,i)=>`<div class="step ${i<=current?'done':''}"><i></i>${labels[st]}</div>`).join('');
+   return `<div class="ref"><div class="row space"><strong>${r.lead_first_name} ${r.lead_last_name}</strong><span class="status">${labels[r.status]||r.status}</span></div><div class="muted">${r.commune||''} · ${r.project_type==='sale'?'Vente':r.project_type==='valuation'?'Estimation':r.project_type==='advice'?'Conseils':'Autre'}</div><div class="timeline">${steps}</div></div>`;
+ }).join('');
+}
+
+$('referralForm').onsubmit=async e=>{
+ e.preventDefault(); clearMessage();
+ const {data:{user}}=await supabase.auth.getUser();
+ if(!user) return message('Vous devez être connecté.',true);
+ const payload={
+   referrer_id:user.id, lead_first_name:$('leadFirst').value.trim(), lead_last_name:$('leadLast').value.trim(),
+   lead_phone:$('leadPhone').value.trim(), lead_email:$('leadEmail').value.trim()||null, commune:$('commune').value.trim(),
+   project_type:$('projectType').value, property_type:$('propertyType').value.trim()||null,
+   relationship:$('relationship').value.trim()||null, notes:$('notes').value.trim()||null, status:'new'
+ };
+ const {error}=await supabase.from('referrals').insert(payload);
+ if(error) return message('Envoi impossible : '+error.message,true);
+ e.target.reset(); message('Recommandation envoyée avec succès.'); await loadReferrals();
+};
+
+document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.getElementById(btn.dataset.target)?.scrollIntoView({behavior:'smooth',block:'start'});
+}));
+$('heroRecommend').onclick=()=>document.getElementById('recommend')?.scrollIntoView({behavior:'smooth',block:'start'});
+
+
+const statusOptions = Object.entries(labels).map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+
+
+async function loadEarnings(){
+ const {data,error}=await supabase.from('remunerations').select('*,referrals(lead_first_name,lead_last_name,commune,status)');
+ if(error) return;
+ const rows=data||[];
+ const sum=st=>rows.filter(x=>x.status===st).reduce((a,x)=>a+Number(x.amount||x.promised_amount||0),0);
+ $('moneyPending').textContent=sum('pending').toLocaleString('fr-FR')+' €';
+ $('moneyValidated').textContent=sum('validated').toLocaleString('fr-FR')+' €';
+ $('moneyPaid').textContent=sum('paid').toLocaleString('fr-FR')+' €';
+ $('earningsList').innerHTML=rows.map(x=>`<div class="payitem"><div class="row space"><strong>${x.referrals?.lead_first_name||'Projet'} ${x.referrals?.lead_last_name||''}</strong><span class="paybadge">${x.status==='paid'?'Payée':x.status==='validated'?'Validée':x.status==='cancelled'?'Annulée':'En cours'}</span></div><div class="muted">${x.referrals?.commune||''}</div><div style="font-size:22px;font-weight:800;margin-top:7px">${Number(x.amount||x.promised_amount||0).toLocaleString('fr-FR')} €</div>${x.sale_acted_at?`<small>Vente actée le ${new Date(x.sale_acted_at).toLocaleDateString('fr-FR')}</small>`:''}</div>`).join('')||'<p class="muted">Aucune rémunération enregistrée pour le moment.</p>';
+}
+
+
+let referrerCache=[];
+async function loadReferrers(){
+ const {data:profiles,error}=await supabase.from('profiles').select('id,first_name,last_name,email,phone,role,referral_code').eq('role','referrer');
+ if(error) return;
+ const {data:refs}=await supabase.from('referrals').select('id,referrer_id,status');
+ const {data:rems}=await supabase.from('remunerations').select('referral_id,amount,promised_amount,status');
+ const refById=Object.fromEntries((refs||[]).map(r=>[r.id,r]));
+ referrerCache=(profiles||[]).map(ap=>{
+   const ar=(refs||[]).filter(r=>r.referrer_id===ap.id);
+   const rr=(rems||[]).filter(x=>refById[x.referral_id]?.referrer_id===ap.id);
+   const total=rr.reduce((a,x)=>a+Number(x.amount||x.promised_amount||0),0);
+   const paid=rr.filter(x=>x.status==='paid').reduce((a,x)=>a+Number(x.amount||x.promised_amount||0),0);
+   return {...ap, recommendations:ar.length, qualified:ar.filter(r=>!['new','to_contact','without_follow_up'].includes(r.status)).length,
+     mandates:ar.filter(r=>['mandate','sold','validated','pending','paid'].includes(r.status)).length,
+     sales:ar.filter(r=>['sold','validated','pending','paid'].includes(r.status)).length,total,paid,due:Math.max(0,total-paid)};
+ });
+ renderReferrers(referrerCache);
+}
+function renderReferrers(rows){
+ const sort=$('referrerSort')?.value||'score';
+ const score=a=>a.recommendations + a.qualified*2 + a.mandates*5 + a.sales*10;
+ rows=[...rows].sort((a,b)=> sort==='paid'?b.paid-a.paid:sort==='sales'?b.sales-a.sales:sort==='recommendations'?b.recommendations-a.recommendations:score(b)-score(a));
+ $('sumReferrers').textContent=referrerCache.length;
+ $('sumReferrals').textContent=referrerCache.reduce((n,a)=>n+a.recommendations,0);
+ $('sumPaid').textContent=referrerCache.reduce((n,a)=>n+a.paid,0).toLocaleString('fr-FR')+' €';
+ $('referrerCards').innerHTML=rows.map((a,i)=>{
+   const sc=score(a), status=a.sales>=3?'Ambassadeur':a.mandates>=1?'Actif':a.recommendations>=1?'Engagé':'Nouveau';
+   const tier=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+   return `<div class="leader-card">
+     <div class="rank">${i+1}</div>
+     <div><strong>${a.first_name||''} ${a.last_name||''}</strong><small>${a.email||''} · ${a.phone||''}</small><span class="tier ${tier}">${status}</span></div>
+     <div class="metric"><small>Recommandations</small><b>${a.recommendations}</b></div>
+     <div class="metric"><small>Mandats</small><b>${a.mandates}</b></div>
+     <div class="metric"><small>Ventes</small><b>${a.sales}</b></div>
+     <div class="metric"><small>Perçu</small><b>${a.paid.toLocaleString('fr-FR')} €</b><small>${a.due.toLocaleString('fr-FR')} € à payer</small></div>
+   </div>`;
+ }).join('')||'<p class="muted">Aucun apporteur enregistré.</p>';
+}
+function filterReferrers(){
+ const q=$('referrerSearch').value.toLowerCase().trim();
+ renderReferrers(referrerCache.filter(a=>`${a.first_name} ${a.last_name} ${a.email} ${a.phone}`.toLowerCase().includes(q)));
+}
+$('referrerSearch').oninput=filterReferrers;
+$('referrerSort').onchange=filterReferrers;
+
+
+let adminReferralCache=[], adminPeople={}, adminRemByRef={}, adminFilter='all';
+function adminFilteredRows(){
+ const q=($('adminSearch')?.value||'').toLowerCase().trim();
+ return adminReferralCache.filter(r=>{
+   const ap=adminPeople[r.referrer_id]||{};
+   const hay=`${r.lead_first_name||''} ${r.lead_last_name||''} ${r.commune||''} ${ap.first_name||''} ${ap.last_name||''}`.toLowerCase();
+   const matchQ=!q||hay.includes(q);
+   const matchF=adminFilter==='all'||r.status===adminFilter||(adminFilter==='progress'&&['to_contact','contacted','appointment','confirmed'].includes(r.status));
+   return matchQ&&matchF;
+ });
+}
+function renderAdminRows(){
+ const refs=adminFilteredRows();
+ const table=refs.map(r=>{
+   const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
+   return `<tr><td><strong>${r.lead_first_name||''} ${r.lead_last_name||''}</strong><br><span class="muted">${r.lead_phone||''}</span></td><td>${r.commune||''}</td><td>${ap.first_name||''} ${ap.last_name||''}</td><td><select data-status="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select></td><td><input data-amount="${r.id}" type="number" min="0" max="1000" value="${rem?.amount??''}" style="width:90px"></td><td><select data-paystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>En cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Validée</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Payée</option><option value="cancelled" ${rem?.status==='cancelled'?'selected':''}>Annulée</option></select></td><td><button class="primary adminSave" data-id="${r.id}">Enregistrer</button></td></tr>`;
+ }).join('');
+ $('adminRows').innerHTML=table||'<tr><td colspan="7" class="muted">Aucune recommandation.</td></tr>';
+ $('adminMobileRows').innerHTML=refs.map(r=>{
+   const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
+   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" max="1000" placeholder="€" value="${rem?.amount??''}"></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
+ }).join('')||'<p class="muted">Aucune recommandation.</p>';
+ document.querySelectorAll('.adminSave').forEach(b=>b.onclick=()=>saveAdminReferral(b.dataset.id));
+ document.querySelectorAll('.mobileSave').forEach(b=>b.onclick=async()=>{
+   const id=b.dataset.id, st=document.querySelector(`[data-mstatus="${id}"]`), amt=document.querySelector(`[data-mamount="${id}"]`);
+   document.querySelector(`[data-status="${id}"]`).value=st.value; document.querySelector(`[data-amount="${id}"]`).value=amt.value;
+   await saveAdminReferral(id);
+ });
+}
+
+async function loadAdmin(){
+  const {data:profiles,error:pe}=await supabase.from('profiles').select('id,first_name,last_name,email,role');
+  const {data:refs,error:re}=await supabase.from('referrals').select('*').order('created_at',{ascending:false});
+  const {data:rems}=await supabase.from('remunerations').select('*');
+  if(pe||re) return message('Chargement administration impossible.',true);
+  const people=Object.fromEntries((profiles||[]).map(x=>[x.id,x]));
+  $('kpiRefs').textContent=(refs||[]).length;
+  $('kpiSales').textContent=(refs||[]).filter(x=>['mandate','sold','validated','pending','paid'].includes(x.status)).length;
+  const due=(rems||[]).filter(x=>['pending','validated'].includes(x.status)).reduce((a,x)=>a+Number(x.amount||0),0);
+  $('kpiPay').textContent=due.toLocaleString('fr-FR')+' €';
+  const converted=(refs||[]).filter(x=>['mandate','sold','validated','pending','paid'].includes(x.status)).length;
+  $('kpiConversion').textContent=((refs||[]).length?Math.round(converted/(refs||[]).length*100):0)+' %';
+  adminReferralCache=refs||[]; adminPeople=people; adminRemByRef=Object.fromEntries((rems||[]).map(x=>[x.referral_id,x]));
+  renderAdminRows();
+  $('lastRefresh').textContent='Dernière mise à jour : '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+async function saveAdminReferral(id){
+  const status=document.querySelector(`[data-status="${id}"]`).value;
+  const amount=document.querySelector(`[data-amount="${id}"]`).value;
+  const paystatus=document.querySelector(`[data-paystatus="${id}"]`).value;
+  const {error}=await supabase.from('referrals').update({status}).eq('id',id);
+  if(error) return message('Modification impossible : '+error.message,true);
+  if(amount!==''){
+    const {data:existing}=await supabase.from('remunerations').select('id').eq('referral_id',id).maybeSingle();
+    if(existing){
+      await supabase.from('remunerations').update({amount:Number(amount),status:paystatus,sale_acted_at:['sold','validated','pending','paid'].includes(status)?new Date().toISOString():null,validated_at:paystatus==='validated'?new Date().toISOString():null}).eq('id',existing.id);
+    } else {
+      await supabase.from('remunerations').insert({referral_id:id,amount:Number(amount),promised_amount:Number(amount),status:paystatus,sale_acted_at:['sold','validated','pending','paid'].includes(status)?new Date().toISOString():null,validated_at:paystatus==='validated'?new Date().toISOString():null});
+    }
+  }
+  message('Recommandation mise à jour.');
+  await loadAdmin(); await loadReferrals(); await loadEarnings();
+}
+$('adminRefresh').onclick=loadAdmin;
+$('adminSearch').oninput=renderAdminRows;
+document.querySelectorAll('.filterbtn').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.filterbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+ adminFilter=b.dataset.filter; renderAdminRows();
+});
+
+
+
+
+async function setupOnboarding(profile,user){
+ if(!user || profile?.role==='admin') return;
+ $('onboardingBox').classList.remove('hidden');
+ $('profilePhone').value=profile?.phone||'';
+ const hasPhone=!!profile?.phone, hasCode=!!profile?.referral_code;
+ const pct=hasPhone&&hasCode?100:hasPhone||hasCode?66:33;
+ $('onboardBar').style.width=pct+'%';
+ $('onboardHint').textContent=pct===100?'Profil prêt ✓ Votre lien et votre QR code sont disponibles juste en dessous.':'Ajoutez votre téléphone pour terminer votre profil.';
+ $('saveProfile').onclick=async()=>{
+   const phone=$('profilePhone').value.trim();
+   if(!phone) return message('Renseignez votre numéro de téléphone.',true);
+   const {error}=await supabase.from('profiles').update({phone}).eq('id',user.id);
+   if(error) return message('Impossible de mettre à jour le profil.',true);
+   $('onboardBar').style.width='100%'; $('onboardHint').textContent='Profil prêt ✓ Votre lien et votre QR code sont disponibles juste en dessous.';
+   message('Profil enregistré.');
+ };
+}
+
+async function setupShareLink(profile,user){
+ if(!user || profile?.role==='admin') return;
+ const code=(profile?.referral_code || user.id.replaceAll('-','').slice(0,8)).toUpperCase();
+ const link=`${location.origin}/?ref=${encodeURIComponent(code)}`;
+ $('shareBox').classList.remove('hidden'); $('shareUrl').textContent=link;
+ $('shareQr').src='https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data='+encodeURIComponent(link);
+ $('shareQr').alt='QR code vers '+link;
+ $('shareQr').onerror=()=>{ $('shareQr').style.display='none'; $('shareQr').parentElement.innerHTML='<div style="color:#0b1930;text-align:center;font-size:13px;padding:15px">QR indisponible.<br>Utilisez le bouton Copier le lien.</div>'; };
+ $('copyShare').onclick=async()=>{await navigator.clipboard.writeText(link);message('Lien copié !');};
+ $('nativeShare').onclick=async()=>{if(navigator.share) await navigator.share({title:'Damien Recommandations',text:'Vous connaissez quelqu’un qui souhaite vendre ? Faites une recommandation ici :',url:link}); else {await navigator.clipboard.writeText(link);message('Lien copié !');}};
+}
+
+
+let lastAdminNotifId=null;
+async function requestBrowserNotifications(){
+ if(!('Notification' in window)) return;
+ if(Notification.permission==='default') try{await Notification.requestPermission();}catch(e){}
+}
+async function adminNotificationPulse(profile){
+ if(profile?.role!=='admin') return;
+ await requestBrowserNotifications();
+ setInterval(async()=>{
+   const {data}=await supabase.from('notifications').select('*').is('read_at',null).order('created_at',{ascending:false}).limit(1);
+   const n=data?.[0];
+   if(n && n.id!==lastAdminNotifId){
+     if(lastAdminNotifId && Notification.permission==='granted') new Notification(n.title,{body:n.body});
+     lastAdminNotifId=n.id;
+     await loadNotifications();
+   }
+ },60000);
+}
+
+async function loadNotifications(){
+ const {data,error}=await supabase.from('notifications').select('*').order('created_at',{ascending:false}).limit(30);
+ if(error) return;
+ const unread=(data||[]).filter(n=>!n.read_at).length;
+ $('notifCount').textContent=unread?`(${unread})`:'';
+ $('notificationsList').innerHTML=(data||[]).map(n=>`<div class="notif"><strong>${n.title}</strong><div>${n.body}</div><small>${new Date(n.created_at).toLocaleString('fr-FR')}</small></div>`).join('')||'<p class="muted">Aucune notification.</p>';
+}
+$('markRead').onclick=async()=>{
+ const {data:{user}}=await supabase.auth.getUser();
+ if(user) await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null);
+ await loadNotifications();
+};
+
+
+const refCode=new URLSearchParams(location.search).get('ref');
+async function initPublicReferral(){
+ if(!refCode) return;
+ $('publicReferral').classList.remove('hidden');
+ $('home').classList.add('hidden');
+ $('auth').classList.add('hidden');
+ $('app').classList.add('hidden');
+ $('mainNav').classList.add('hidden');
+ try{
+   const {data,error}=await supabase.rpc('get_public_referrer',{p_code:refCode});
+   if(error || !data?.length){
+     $('recommendedBy').innerHTML='<strong>Lien de recommandation invalide ou expiré.</strong>';
+     $('publicReferralForm').classList.add('hidden');
+     return;
+   }
+   $('recommendedBy').innerHTML=`Recommandé par <strong>${data[0].first_name} ${data[0].last_initial}</strong> · Transmettez-moi les coordonnées du propriétaire, je prends le relais.`;
+ }catch(e){}
+}
+$('publicReferralForm').onsubmit=async e=>{
+ e.preventDefault();
+ const btn=e.submitter; btn.disabled=true; btn.textContent='Envoi…';
+ const {error}=await supabase.rpc('submit_public_referral',{
+   p_referrer_code:refCode,p_first_name:$('pubFirst').value,p_last_name:$('pubLast').value,p_phone:$('pubPhone').value,
+   p_email:$('pubEmail').value,p_commune:$('pubCommune').value,p_project_type:$('pubProject').value,
+   p_property_type:$('pubProperty').value,p_relationship:$('pubRelation').value,p_notes:$('pubNotes').value
+ });
+ btn.disabled=false;btn.textContent='Envoyer la recommandation';
+ if(error) return message('Impossible d’envoyer la recommandation. Vérifiez le lien ou réessayez.',true);
+ $('publicReferralForm').classList.add('hidden');$('publicSuccess').classList.remove('hidden');
+};
+initPublicReferral();
+
+supabase.auth.onAuthStateChange((_event,session)=>{ if(session && !refCode) boot(); });
+boot();
+</script>
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));
+</script>
+</body></html>

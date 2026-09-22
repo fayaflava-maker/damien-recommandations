@@ -1,10 +1,8 @@
-# Damien Recommandations
+# Damien Recommandations — Cloudflare
 
-Version prête pour un déploiement manuel sur Netlify.
+Version Cloudflare de la PWA Damien Recommandations.
 
-## Déploiement
-Décompresser le ZIP, puis glisser le dossier `damien-recommandations-netlify`
-dans la zone de déploiement manuel Netlify.
-
-Cette version se connecte au projet Supabase existant avec la clé publique
-(publishable key). Aucune clé service_role n'est incluse.
+Déploiement Cloudflare Workers Static Assets :
+- commande de déploiement : `npx wrangler deploy`
+- les fichiers publics sont dans `public/`
+- `_redirects` et `netlify.toml` ne sont volontairement pas inclus.

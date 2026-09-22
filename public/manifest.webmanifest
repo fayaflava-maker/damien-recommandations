@@ -1,0 +1,9 @@
+{
+  "name": "Damien Recommandations",
+  "short_name": "Recommandations",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#111827",
+  "description": "Application de recommandations immobilières de Damien Royez"
+}

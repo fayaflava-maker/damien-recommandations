@@ -1,7 +1,8 @@
 {
   "name": "damien-recommandations",
-  "compatibility_date": "2026-09-21",
+  "compatibility_date": "2026-09-22",
   "assets": {
-    "directory": "."
+    "directory": "./public",
+    "not_found_handling": "single-page-application"
   }
 }
