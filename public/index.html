@@ -967,31 +967,37 @@ $('publicReferralForm').onsubmit=async e=>{
  if(error) return message('Impossible d’envoyer la recommandation. Vérifiez le lien ou réessayez.',true);
  $('publicReferralForm').classList.add('hidden');$('publicSuccess').classList.remove('hidden');
 };
+async function markAllNotificationsRead(){
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user) return;
+  const btn=$('markAllNotificationsRead');
+  if(btn){btn.disabled=true;btn.textContent='Traitement…';}
+  const {error}=await supabase.from('notifications')
+    .update({read_at:new Date().toISOString()})
+    .eq('user_id',user.id)
+    .is('read_at',null);
+  if(btn){btn.disabled=false;btn.textContent='✓ Tout marquer comme lu';}
+  if(error) return message('Action impossible : '+error.message,true);
+  await loadNotifications();
+}
+async function deleteAllNotifications(){
+  if(!confirm('Supprimer toutes les notifications ? Cette action est définitive.')) return;
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user) return;
+  const btn=$('deleteAllNotifications');
+  if(btn){btn.disabled=true;btn.textContent='Suppression…';}
+  const {error}=await supabase.from('notifications').delete().eq('user_id',user.id);
+  if(btn){btn.disabled=false;btn.textContent='🗑️ Supprimer toutes les notifications';}
+  if(error) return message('Suppression impossible : '+error.message,true);
+  await loadNotifications();
+}
+$('markAllNotificationsRead')?.addEventListener('click',markAllNotificationsRead);
+$('deleteAllNotifications')?.addEventListener('click',deleteAllNotifications);
+
 initPublicReferral();
 
 supabase.auth.onAuthStateChange((_event,session)=>{ if(session && !refCode) boot(); });
 boot();
 </script>
-<script>
-if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));
-
-async function refreshNotificationUI(){ await loadNotifications(); }
-
-
-async function markAllNotificationsRead(){
-  const {data:{user}}=await supabase.auth.getUser(); if(!user)return;
-  const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null);
-  if(error){message('Action impossible : '+error.message,true);return;}
-  await refreshNotificationUI();
-}
-async function deleteAllNotifications(){
-  if(!confirm('Supprimer toutes les notifications ? Cette action est définitive.'))return;
-  const {data:{user}}=await supabase.auth.getUser(); if(!user)return;
-  const {error}=await supabase.from('notifications').delete().eq('user_id',user.id);
-  if(error){message('Suppression impossible : '+error.message,true);return;}
-  await refreshNotificationUI();
-}
-$('markAllNotificationsRead')?.addEventListener('click',()=>markAllNotificationsRead());
-$('deleteAllNotifications')?.addEventListener('click',()=>deleteAllNotifications());
-</script>
+<script>if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));</script>
 </body></html>

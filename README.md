@@ -1,2 +1,2 @@
-# Damien Recommandations — V13.9
-Notifications: événements attachés après rendu DOM, distinction visuelle Lue/Nouvelle, actions individuelles sécurisées par user_id.
+# Damien Recommandations — V13.10
+Correctif ciblé des deux actions globales de notifications : handlers déplacés dans le module principal pour partager Supabase et le rendu notifications.
