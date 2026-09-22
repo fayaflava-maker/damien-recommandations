@@ -161,6 +161,7 @@
     <button class="light navbtn" data-target="tracking">Mon suivi</button>
     <button class="light navbtn" data-target="earnings">Mes rémunérations</button>
     <button class="light navbtn" data-target="profile">Mon profil</button><button class="light navbtn" data-target="notificationsPanel">🔔 Notifications <span id="notifCount"></span></button>
+<button id="contactsNav" class="light navbtn hidden" data-target="contactsPanel">Contacts recommandés</button>
 <button id="referrersNav" class="light navbtn hidden" data-target="referrersPanel">Mes apporteurs</button>
 <button id="exportsNav" class="light navbtn hidden" data-target="exportsPanel">Exports</button>
 <button id="archivesNav" class="light navbtn hidden" data-target="archivesPanel">Archives</button>
@@ -317,6 +318,19 @@
 
 
 
+
+    <section id="contactsPanel" class="card hidden">
+      <div class="section-head">
+        <div><h2>Contacts recommandés</h2><p class="muted">Tous les contacts transmis par vos apporteurs.</p></div>
+        <button id="refreshContacts" class="light">Actualiser</button>
+      </div>
+      <div class="grid2" style="margin:14px 0">
+        <label>Rechercher<input id="contactSearch" placeholder="Nom, téléphone, commune, apporteur…"></label>
+        <label>Statut<select id="contactStatusFilter"><option value="">Tous les statuts</option></select></label>
+      </div>
+      <div id="contactsList" class="list"></div>
+    </section>
+
     <section id="archivesPanel" class="card hidden">
       <div class="section-head">
         <div><h2>Dossiers archivés</h2><p class="muted">Consultez les projets terminés ou sans suite et réactivez-les si nécessaire.</p></div>
@@ -471,11 +485,11 @@ async function boot(){
  $('role').textContent = profile?.role==='admin' ? 'Administration' : 'Apporteur d’affaires';
  await setupOnboarding(profile,user); await setupShareLink(profile,user); await adminNotificationPulse(profile);
  if(profile?.role==='admin'){
-   $('adminNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden'); $('exportsNav').classList.remove('hidden'); $('archivesNav').classList.remove('hidden');
+   $('adminNav').classList.remove('hidden'); $('contactsNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden'); $('exportsNav').classList.remove('hidden'); $('archivesNav').classList.remove('hidden');
    // Admin has a dedicated workspace: hide apporteur-facing views.
    ['home','recommend','tracking','earnings','profile'].forEach(id=>$(id)?.classList.add('hidden'));
    document.querySelectorAll('.navbtn').forEach(b=>{
-     if(!['adminPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
+     if(!['adminPanel','contactsPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
    });
    $('adminPanel').classList.remove('hidden');
    await loadAdmin(); await loadReferrers();
@@ -513,12 +527,13 @@ $('referralForm').onsubmit=async e=>{
 
 document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',async()=>{
   const target=btn.dataset.target;
-  const adminTargets=['adminPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'];
+  const adminTargets=['adminPanel','contactsPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'];
   if(adminTargets.includes(target)){
     adminTargets.forEach(id=>$(id)?.classList.add('hidden'));
     $(target)?.classList.remove('hidden');
     document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
+    if(target==='contactsPanel') await loadContacts();
     if(target==='referrersPanel') await loadReferrers();
     if(target==='adminPanel') await loadAdmin();
     if(target==='notificationsPanel') await loadNotifications();
@@ -657,9 +672,53 @@ async function saveAdminReferral(id){
 
 
 
+
+const STATUS_LABELS={new:'Nouvelle recommandation',to_contact:'À contacter',contacted:'Contact établi',appointment:'Rendez-vous / estimation',confirmed:'Projet confirmé',mandate:'Mandat signé',sold:'Bien vendu',validated:'Rémunération validée',pending:'Paiement en cours',paid:'Paiement effectué',closed:'Clôturé',without_follow_up:'Sans suite'};
+let contactRows=[];
+async function loadContacts(){
+  const {data:refs,error}=await supabase.from('referrals')
+    .select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,status,created_at')
+    .is('archived_at',null).order('created_at',{ascending:false});
+  if(error){$('contactsList').innerHTML='<p class="error">'+esc(error.message)+'</p>';return;}
+  const ids=[...new Set((refs||[]).map(r=>r.referrer_id).filter(Boolean))]; let pmap={};
+  if(ids.length){const {data:ps}=await supabase.from('profiles').select('id,first_name,last_name,email,phone').in('id',ids);pmap=Object.fromEntries((ps||[]).map(p=>[p.id,p]));}
+  contactRows=(refs||[]).map(r=>({...r,referrer_name:`${pmap[r.referrer_id]?.first_name||''} ${pmap[r.referrer_id]?.last_name||''}`.trim()}));
+  const sel=$('contactStatusFilter');
+  if(sel && sel.options.length===1) Object.entries(STATUS_LABELS).forEach(([v,l])=>sel.add(new Option(l,v)));
+  renderContacts();
+}
+function renderContacts(){
+  const q=($('contactSearch')?.value||'').trim().toLowerCase(), st=$('contactStatusFilter')?.value||'';
+  const rows=contactRows.filter(r=>(!st||r.status===st)&&(!q||`${r.lead_first_name} ${r.lead_last_name} ${r.lead_phone} ${r.lead_email} ${r.commune} ${r.referrer_name}`.toLowerCase().includes(q)));
+  $('contactsList').innerHTML=rows.length?rows.map(r=>`
+    <article class="item">
+      <div class="section-head">
+        <div><b>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</b>
+          <div class="muted">${esc(r.commune||'—')} · ${esc(r.project_type||'—')} · ${esc(r.property_type||'—')}</div>
+        </div>
+        <span class="pill">${esc(STATUS_LABELS[r.status]||r.status||'—')}</span>
+      </div>
+      <div class="muted">Apporteur : ${esc(r.referrer_name||'—')} · Transmis le ${excelDate(r.created_at)}</div>
+      <div style="margin-top:8px">${r.lead_phone?`📞 ${esc(r.lead_phone)}`:''} ${r.lead_email?` · ✉️ ${esc(r.lead_email)}`:''}</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="light" onclick="window.openContactAdmin('${r.id}')">Ouvrir la fiche</button>
+        <button class="light" onclick="window.archiveReferral('${r.id}')">📦 Archiver</button>
+      </div>
+    </article>`).join(''):'<p class="muted">Aucun contact recommandé actif.</p>';
+}
+window.openContactAdmin=async function(id){
+  window.currentAdminReferralId=id;
+  if(typeof openAdminReferral==='function') return await openAdminReferral(id);
+  const r=contactRows.find(x=>x.id===id);
+  if(r) alert(`${r.lead_first_name||''} ${r.lead_last_name||''}\n${r.lead_phone||''}\n${r.lead_email||''}\n${r.commune||''}`);
+};
+$('refreshContacts')?.addEventListener('click',loadContacts);
+$('contactSearch')?.addEventListener('input',renderContacts);
+$('contactStatusFilter')?.addEventListener('change',renderContacts);
+
 const ARCHIVE_LABELS={completed:'Projet finalisé',abandoned:'Projet abandonné',without_follow_up:'Sans suite',other:'Autre'};
 async function archiveReferral(id){
-  const reason=prompt("Motif d’archivage :\\n1 = Projet finalisé\\n2 = Projet abandonné\\n3 = Sans suite\\n4 = Autre");
+  const reason=prompt("Motif d’archivage :\n1 = Projet finalisé / vente réalisée\n2 = Projet abandonné\n3 = Sans suite\n4 = Autre");
   const map={'1':'completed','2':'abandoned','3':'without_follow_up','4':'other'};
   if(!map[reason]) return;
   if(!confirm('Archiver ce dossier ? Il restera consultable dans l’onglet Archives.')) return;
@@ -668,7 +727,9 @@ async function archiveReferral(id){
   if(error) return message('Archivage impossible : '+error.message,true);
   message('Dossier archivé.');
   await loadAdmin();
+  await loadContacts();
 }
+window.archiveReferral=archiveReferral;
 async function restoreReferral(id){
   if(!confirm('Réactiver ce dossier et le remettre dans les projets actifs ?')) return;
   const {error}=await supabase.from('referrals').update({archived_at:null,archived_by:null,archive_reason:null}).eq('id',id);

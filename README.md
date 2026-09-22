@@ -1,3 +1,2 @@
-# Damien Recommandations — V13.3
-RGPD enrichi + archivage/réactivation des dossiers.
-La migration Supabase v13_3_referral_archiving a été appliquée.
+# Damien Recommandations — V13.4
+Ajout Contacts recommandés + archivage directement depuis chaque contact + consultation/réactivation des archives.
