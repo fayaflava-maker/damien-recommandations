@@ -298,7 +298,7 @@
     </section>
 
     <section id="notificationsPanel" class="card">
-      <div class="row space"><h2 style="margin:0">Notifications</h2><button id="markRead" class="light">Tout marquer comme lu</button></div>
+      <div class="row space"><h2 style="margin:0">Notifications</h2></div>
       <div id="notificationActions" class="section-head" style="margin:10px 0;gap:8px;flex-wrap:wrap">
   <button id="markAllNotificationsRead" class="light">✓ Tout marquer comme lu</button>
   <button id="deleteAllNotifications" class="light">🗑️ Supprimer toutes les notifications</button>
@@ -897,21 +897,14 @@ async function loadNotifications(){
       <div>${esc(n.body||'')}</div>
       <div class="muted">${new Date(n.created_at).toLocaleString('fr-FR')}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        ${n.read_at?'':`<button class="light" data-notification-read="${n.id}">✓ Marquer cette notification comme lue</button>`}
-        <button class="light" data-notification-delete="${n.id}">🗑️ Supprimer cette notification</button>
+        ${n.read_at?'':`<button class="light" onclick="window.markNotificationRead(\'${n.id}\')">✓ Marquer cette notification comme lue</button>`}
+        <button class="light" onclick="window.deleteNotification(\'${n.id}\')">🗑️ Supprimer cette notification</button>
       </div>
     </article>`).join(''):'<p class="muted">Aucune notification.</p>';
   const unread=(data||[]).filter(n=>!n.read_at).length;
   const nav=$('notificationsNav');
   if(nav) nav.textContent=`🔔 Notifications${unread?` (${unread})`:''}`;
 }
-$('markRead').onclick=async()=>{
- const {data:{user}}=await supabase.auth.getUser();
- if(user) await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null);
- await loadNotifications();
-};
-
-
 const refCode=new URLSearchParams(location.search).get('ref');
 async function initPublicReferral(){
  if(!refCode) return;
@@ -971,6 +964,8 @@ async function deleteNotification(id){
   if(error){message('Suppression impossible : '+error.message,true);return;}
   await refreshNotificationUI();
 }
+window.markNotificationRead=markNotificationRead;
+window.deleteNotification=deleteNotification;
 async function markAllNotificationsRead(){
   const {data:{user}}=await supabase.auth.getUser(); if(!user)return;
   const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null);
@@ -984,11 +979,7 @@ async function deleteAllNotifications(){
   if(error){message('Suppression impossible : '+error.message,true);return;}
   await refreshNotificationUI();
 }
-$('markAllNotificationsRead')?.addEventListener('click',markAllNotificationsRead);
-$('deleteAllNotifications')?.addEventListener('click',deleteAllNotifications);
-document.addEventListener('click',async(e)=>{
- const r=e.target.closest?.('[data-notification-read]'); if(r){e.preventDefault();return markNotificationRead(r.dataset.notificationRead);}
- const d=e.target.closest?.('[data-notification-delete]'); if(d){e.preventDefault();return deleteNotification(d.dataset.notificationDelete);}
-});
+$('markAllNotificationsRead')?.addEventListener('click',()=>markAllNotificationsRead());
+$('deleteAllNotifications')?.addEventListener('click',()=>deleteAllNotifications());
 </script>
 </body></html>
