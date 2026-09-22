@@ -888,17 +888,17 @@ async function loadNotifications(){
   const {data:{user}}=await supabase.auth.getUser();
   if(!user) return;
   const {data,error}=await supabase.from('notifications')
-    .select('id,title,message,created_at,read_at')
+    .select('id,title,body,created_at,read_at')
     .eq('user_id',user.id).order('created_at',{ascending:false});
   if(error){$('notificationsList').innerHTML='<p class="error">'+esc(error.message)+'</p>';return;}
   $('notificationsList').innerHTML=(data||[]).length?(data||[]).map(n=>`
     <article class="item ${n.read_at?'':'unread'}">
       <div><b>${esc(n.title||'Notification')}</b></div>
-      <div>${esc(n.message||'')}</div>
+      <div>${esc(n.body||'')}</div>
       <div class="muted">${new Date(n.created_at).toLocaleString('fr-FR')}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        ${n.read_at?'':`<button class="light" data-notification-read="${n.id}">✓ Marquer comme lu</button>`}
-        <button class="light" data-notification-delete="${n.id}">🗑️ Supprimer</button>
+        ${n.read_at?'':`<button class="light" data-notification-read="${n.id}">✓ Marquer cette notification comme lue</button>`}
+        <button class="light" data-notification-delete="${n.id}">🗑️ Supprimer cette notification</button>
       </div>
     </article>`).join(''):'<p class="muted">Aucune notification.</p>';
   const unread=(data||[]).filter(n=>!n.read_at).length;
