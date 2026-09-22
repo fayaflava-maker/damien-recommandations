@@ -1,4 +1,2 @@
-# Damien Recommandations — V13.8
-- Suppression du doublon « Tout marquer comme lu ».
-- Actions individuelles reliées directement à chaque notification.
-- Notifications toujours strictement isolées par user_id côté Supabase.
+# Damien Recommandations — V13.9
+Notifications: événements attachés après rendu DOM, distinction visuelle Lue/Nouvelle, actions individuelles sécurisées par user_id.

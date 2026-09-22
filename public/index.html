@@ -890,17 +890,49 @@ async function loadNotifications(){
   const {data,error}=await supabase.from('notifications')
     .select('id,title,body,created_at,read_at')
     .eq('user_id',user.id).order('created_at',{ascending:false});
-  if(error){$('notificationsList').innerHTML='<p class="error">'+esc(error.message)+'</p>';return;}
-  $('notificationsList').innerHTML=(data||[]).length?(data||[]).map(n=>`
-    <article class="item ${n.read_at?'':'unread'}">
-      <div><b>${esc(n.title||'Notification')}</b></div>
+  const list=$('notificationsList');
+  if(error){list.innerHTML='<p class="error">'+esc(error.message)+'</p>';return;}
+
+  list.innerHTML=(data||[]).length?(data||[]).map(n=>`
+    <article class="item notification-card" data-notification-id="${n.id}"
+      style="${n.read_at
+        ? 'opacity:.62;background:#f5f5f5;border-left:4px solid #b7b7b7;'
+        : 'opacity:1;background:#fff;border-left:4px solid #d81b60;box-shadow:0 4px 14px rgba(0,0,0,.06);'}">
+      <div class="section-head">
+        <b>${esc(n.title||'Notification')}</b>
+        <span class="pill">${n.read_at?'Lue':'● Nouvelle'}</span>
+      </div>
       <div>${esc(n.body||'')}</div>
       <div class="muted">${new Date(n.created_at).toLocaleString('fr-FR')}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        ${n.read_at?'':`<button class="light" onclick="window.markNotificationRead(\'${n.id}\')">✓ Marquer cette notification comme lue</button>`}
-        <button class="light" onclick="window.deleteNotification(\'${n.id}\')">🗑️ Supprimer cette notification</button>
+      <div class="notification-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        ${n.read_at?'':`<button type="button" class="light notif-read-btn" data-id="${n.id}">✓ Marquer comme lue</button>`}
+        <button type="button" class="light notif-delete-btn" data-id="${n.id}">🗑️ Supprimer</button>
       </div>
     </article>`).join(''):'<p class="muted">Aucune notification.</p>';
+
+  list.querySelectorAll('.notif-read-btn').forEach(btn=>{
+    btn.addEventListener('click', async ev=>{
+      ev.preventDefault(); ev.stopPropagation();
+      btn.disabled=true;
+      const {error}=await supabase.from('notifications')
+        .update({read_at:new Date().toISOString()})
+        .eq('id',btn.dataset.id).eq('user_id',user.id);
+      if(error){btn.disabled=false;return message('Impossible de marquer comme lue : '+error.message,true);}
+      await loadNotifications();
+    });
+  });
+  list.querySelectorAll('.notif-delete-btn').forEach(btn=>{
+    btn.addEventListener('click', async ev=>{
+      ev.preventDefault(); ev.stopPropagation();
+      if(!confirm('Supprimer cette notification ?')) return;
+      btn.disabled=true;
+      const {error}=await supabase.from('notifications')
+        .delete().eq('id',btn.dataset.id).eq('user_id',user.id);
+      if(error){btn.disabled=false;return message('Suppression impossible : '+error.message,true);}
+      await loadNotifications();
+    });
+  });
+
   const unread=(data||[]).filter(n=>!n.read_at).length;
   const nav=$('notificationsNav');
   if(nav) nav.textContent=`🔔 Notifications${unread?` (${unread})`:''}`;
@@ -943,29 +975,9 @@ boot();
 <script>
 if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));
 
-document.addEventListener('click', async (e)=>{
-  if(e.target?.id==='archiveCurrentReferral'){
-    const id=e.target.dataset.referralId || window.currentAdminReferralId;
-    if(id) await archiveReferral(id);
-  }
-});
-
-
-
 async function refreshNotificationUI(){ await loadNotifications(); }
-async function markNotificationRead(id){
-  const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id);
-  if(error){message('Impossible de marquer comme lu : '+error.message,true);return;}
-  await refreshNotificationUI();
-}
-async function deleteNotification(id){
-  if(!confirm('Supprimer cette notification ?')) return;
-  const {error}=await supabase.from('notifications').delete().eq('id',id);
-  if(error){message('Suppression impossible : '+error.message,true);return;}
-  await refreshNotificationUI();
-}
-window.markNotificationRead=markNotificationRead;
-window.deleteNotification=deleteNotification;
+
+
 async function markAllNotificationsRead(){
   const {data:{user}}=await supabase.auth.getUser(); if(!user)return;
   const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null);
