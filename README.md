@@ -1,2 +1,2 @@
-# Damien Recommandations — V13.4
-Ajout Contacts recommandés + archivage directement depuis chaque contact + consultation/réactivation des archives.
+# Damien Recommandations — V13.5
+Notifications: lecture/suppression individuelle et globale. Libellé Projet de vente à la place de sale.

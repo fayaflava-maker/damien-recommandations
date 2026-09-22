@@ -299,7 +299,11 @@
 
     <section id="notificationsPanel" class="card">
       <div class="row space"><h2 style="margin:0">Notifications</h2><button id="markRead" class="light">Tout marquer comme lu</button></div>
-      <div id="notificationsList" style="margin-top:12px"><p class="muted">Aucune notification.</p></div>
+      <div class="section-head" style="margin:10px 0;gap:8px;flex-wrap:wrap">
+      <button id="markAllNotificationsRead" class="light">✓ Tout marquer comme lu</button>
+      <button id="deleteAllNotifications" class="light">🗑️ Supprimer toutes les notifications</button>
+    </div>
+    <div id="notificationsList" style="margin-top:12px"><p class="muted">Aucune notification.</p></div>
     </section>
 
     <section id="referrersPanel" class="card hidden">
@@ -673,6 +677,7 @@ async function saveAdminReferral(id){
 
 
 
+const PROJECT_LABELS={sale:'Projet de vente',valuation:'Demande d’estimation',advice:'Demande de conseil',other:'Autre projet'};
 const STATUS_LABELS={new:'Nouvelle recommandation',to_contact:'À contacter',contacted:'Contact établi',appointment:'Rendez-vous / estimation',confirmed:'Projet confirmé',mandate:'Mandat signé',sold:'Bien vendu',validated:'Rémunération validée',pending:'Paiement en cours',paid:'Paiement effectué',closed:'Clôturé',without_follow_up:'Sans suite'};
 let contactRows=[];
 async function loadContacts(){
@@ -694,7 +699,7 @@ function renderContacts(){
     <article class="item">
       <div class="section-head">
         <div><b>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</b>
-          <div class="muted">${esc(r.commune||'—')} · ${esc(r.project_type||'—')} · ${esc(r.property_type||'—')}</div>
+          <div class="muted">${esc(r.commune||'—')} · ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'—')} · ${esc(r.property_type||'—')}</div>
         </div>
         <span class="pill">${esc(STATUS_LABELS[r.status]||r.status||'—')}</span>
       </div>
@@ -936,6 +941,47 @@ document.addEventListener('click', async (e)=>{
     const id=e.target.dataset.referralId || window.currentAdminReferralId;
     if(id) await archiveReferral(id);
   }
+});
+
+async function refreshNotificationUI(){
+  if(typeof loadNotifications==='function') await loadNotifications();
+  if(typeof refreshNotificationBadge==='function') await refreshNotificationBadge();
+  if(typeof updateNotificationBadge==='function') await updateNotificationBadge();
+}
+async function markNotificationRead(id){
+  const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',id);
+  if(error) return message('Impossible de marquer la notification comme lue : '+error.message,true);
+  await refreshNotificationUI();
+}
+async function deleteNotification(id){
+  if(!confirm('Supprimer cette notification ?')) return;
+  const {error}=await supabase.from('notifications').delete().eq('id',id);
+  if(error) return message('Suppression impossible : '+error.message,true);
+  await refreshNotificationUI();
+}
+async function markAllNotificationsRead(){
+  const {data:{user}}=await supabase.auth.getUser(); if(!user) return;
+  const {error}=await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('user_id',user.id).is('read_at',null);
+  if(error) return message('Impossible de marquer les notifications comme lues : '+error.message,true);
+  await refreshNotificationUI();
+}
+async function deleteAllNotifications(){
+  if(!confirm('Supprimer toutes vos notifications ? Cette action est définitive.')) return;
+  const {data:{user}}=await supabase.auth.getUser(); if(!user) return;
+  const {error}=await supabase.from('notifications').delete().eq('user_id',user.id);
+  if(error) return message('Suppression impossible : '+error.message,true);
+  await refreshNotificationUI();
+}
+window.markNotificationRead=markNotificationRead;
+window.deleteNotification=deleteNotification;
+$('markAllNotificationsRead')?.addEventListener('click',markAllNotificationsRead);
+$('deleteAllNotifications')?.addEventListener('click',deleteAllNotifications);
+
+document.addEventListener('click',async e=>{
+  const readBtn=e.target.closest?.('[data-notification-read]');
+  if(readBtn){e.preventDefault();await markNotificationRead(readBtn.dataset.notificationRead);}
+  const delBtn=e.target.closest?.('[data-notification-delete]');
+  if(delBtn){e.preventDefault();await deleteNotification(delBtn.dataset.notificationDelete);}
 });
 </script>
 </body></html>
