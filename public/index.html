@@ -172,6 +172,14 @@ body.user-authenticated #auth{display:none!important}
  .v14-stat b{font-size:20px}
 }
 </style>
+<style>
+.smart-banner{transition:.2s ease}
+.smart-banner[data-kind="welcome"]{background:#f0f8ee}
+.smart-banner[data-kind="progress"]{background:#f3f7fb}
+.smart-banner[data-kind="reward"]{background:#fff3f7}
+.smart-banner[data-kind="paid"]{background:#f7f3ff}
+.smart-banner[data-kind="tip"]{background:#faf8f0}
+</style>
 </head>
 <body>
 <header>
@@ -186,7 +194,7 @@ body.user-authenticated #auth{display:none!important}
   <div class="wrap row" style="padding-top:10px;padding-bottom:10px;overflow-x:auto;flex-wrap:nowrap">
     <button class="light navbtn" data-target="referrerDashboard">Accueil</button>
     <button class="primary navbtn" data-target="recommend">Faire une recommandation</button>
-    <button class="light navbtn" data-target="tracking">Mon suivi</button>
+    <button class="light navbtn" data-target="tracking">Mes recommandations</button>
     <button class="light navbtn" data-target="earnings">Mes rémunérations</button>
     <button class="light navbtn" data-target="profile">Mon profil</button><button class="light navbtn" data-target="notificationsPanel">🔔 Notifications <span id="notifCount"></span></button>
 <button id="contactsNav" class="light navbtn hidden" data-target="contactsPanel">Contacts recommandés</button>
@@ -273,10 +281,15 @@ body.user-authenticated #auth{display:none!important}
           <div class="muted">Suivez vos recommandations et découvrez où en sont vos récompenses.</div>
         </div>
       </div>
-      <div id="rewardBanner" class="reward-banner hidden"><b id="rewardBannerTitle">🎉 Excellente nouvelle !</b><div>Votre recommandation a abouti à une vente.</div><div id="rewardBannerAmount" class="amount"></div><div>Votre récompense est disponible !</div><button id="rewardBannerBtn" class="cta-pink" style="margin-top:10px">Voir ma récompense</button></div>
+      <div id="rewardBanner" class="reward-banner smart-banner">
+        <b id="rewardBannerTitle">👋 Bienvenue !</b>
+        <div id="rewardBannerText">Votre espace vous permet de suivre simplement vos recommandations et vos récompenses.</div>
+        <div id="rewardBannerAmount" class="amount hidden"></div>
+        <button id="rewardBannerBtn" class="cta-pink" style="margin-top:10px">Découvrir</button>
+      </div>
       <div class="v14-stats"><div class="v14-stat"><span>🤝 Recommandations transmises</span><b id="dashRefs">0</b></div><div class="v14-stat"><span>🏡 Ventes abouties</span><b id="dashSales">0</b></div><div class="v14-stat"><span>🎁 Récompenses gagnées</span><b id="dashRewards">0 €</b></div></div>
       <div class="warm-prompt">Une personne de votre entourage a un projet immobilier ? Pensez à la recommander 😊</div>
-      <button id="dashRecommend" class="cta-pink v14-maincta">+ Recommander quelqu’un</button>
+      <button id="dashRecommend" class="cta-pink v14-maincta">+ Faire une recommandation</button>
     </section>
 
     <section id="recommend" class="card">
@@ -299,7 +312,7 @@ body.user-authenticated #auth{display:none!important}
     </section>
 
     <section id="tracking" class="card">
-      <div class="row space"><h2 style="margin:0">Mon suivi</h2><button class="light" id="refresh">Actualiser</button></div>
+      <div class="row space"><h2 style="margin:0">Mes recommandations</h2><button class="light" id="refresh">Actualiser</button></div>
       <div id="referrals" style="margin-top:10px"></div>
     </section>
 
@@ -1038,20 +1051,65 @@ $('uploadPresentationPhoto').onclick=async()=>{try{const url=await uploadImage($
 $('resetPresentationPhoto').onclick=async()=>{const {error}=await supabase.from('app_settings').update({presentation_photo_url:null,updated_at:new Date().toISOString()}).eq('id','main');if(error)return message(error.message,true);await loadPresentationPhoto();message('Photo de présentation restaurée.');};
 async function refreshReferrerDashboard(profile){
  if(!profile||profile.role==='admin') return;
- const [{data:refs},{data:rems}]=await Promise.all([supabase.from('referrals').select('id,status'),supabase.from('remunerations').select('amount,status,referral_id')]);
+ const [{data:refs},{data:rems}]=await Promise.all([
+   supabase.from('referrals').select('id,status'),
+   supabase.from('remunerations').select('amount,status,referral_id')
+ ]);
  const rr=refs||[], rm=rems||[];
  $('dashRefs').textContent=rr.length;
  $('dashSales').textContent=rr.filter(x=>['sold','validated','pending','paid'].includes(x.status)).length;
  const won=rm.filter(x=>['validated','pending','paid'].includes(x.status)).reduce((a,x)=>a+Number(x.amount||0),0);
  $('dashRewards').textContent=won.toLocaleString('fr-FR')+' €';
+
  const available=rm.filter(x=>['validated','pending'].includes(x.status));
- if(available.length){const amount=available.reduce((a,x)=>a+Number(x.amount||0),0);$('rewardBannerAmount').textContent=amount.toLocaleString('fr-FR')+' €';$('rewardBanner').classList.remove('hidden');}else $('rewardBanner').classList.add('hidden');
+ const paid=rm.filter(x=>x.status==='paid');
+ const mandates=rr.filter(x=>x.status==='mandate');
+ const active=rr.filter(x=>!['paid','closed','without_follow_up','sold'].includes(x.status));
+ const banner=$('rewardBanner'), bTitle=$('rewardBannerTitle'), bText=$('rewardBannerText'), bAmount=$('rewardBannerAmount'), bBtn=$('rewardBannerBtn');
+ banner?.classList.remove('hidden');
+ bAmount?.classList.add('hidden');
+
+ if(available.length){
+   const amount=available.reduce((a,x)=>a+Number(x.amount||0),0);
+   bTitle.textContent=`🎉 Excellente nouvelle${profile.first_name ? ', '+profile.first_name : ''} !`;
+   bText.textContent='Une vente a abouti. Votre récompense est disponible !';
+   bAmount.textContent=amount.toLocaleString('fr-FR')+' €'; bAmount.classList.remove('hidden');
+   bBtn.textContent='Voir ma récompense'; bBtn.dataset.target='earnings'; banner.dataset.kind='reward';
+ } else if(paid.length){
+   const amount=Number(paid[0].amount||0);
+   bTitle.textContent='🎁 Récompense versée';
+   bText.textContent=`${amount ? amount.toLocaleString('fr-FR')+' € ont été versés. ' : ''}Merci pour votre confiance !`;
+   bBtn.textContent='Mes rémunérations'; bBtn.dataset.target='earnings'; banner.dataset.kind='paid';
+ } else if(mandates.length){
+   bTitle.textContent='✍️ Une étape importante !';
+   bText.textContent='Un mandat a été signé grâce à l’une de vos recommandations.';
+   bBtn.textContent='Voir mes recommandations'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+ } else if(rr.length===0){
+   bTitle.textContent=`🚀 Vos premiers pas${profile.first_name ? ', '+profile.first_name : ''}`;
+   bText.textContent='Vous connaissez quelqu’un qui envisage de vendre ? Faites votre première recommandation.';
+   bBtn.textContent='Faire une recommandation'; bBtn.dataset.target='recommend'; banner.dataset.kind='welcome';
+ } else if(rr.length===1){
+   bTitle.textContent='🤝 C’est parti !';
+   bText.textContent='Votre première recommandation est entre mes mains. Je vous tiens informé de son évolution.';
+   bBtn.textContent='Voir ma recommandation'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+ } else if(active.length){
+   bTitle.textContent='🏡 Vos projets avancent';
+   bText.textContent=`Vous avez ${active.length} recommandation${active.length>1?'s':''} en cours. Retrouvez leur évolution ici.`;
+   bBtn.textContent='Voir mes recommandations'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+ } else {
+   bTitle.textContent=`⭐ Merci${profile.first_name ? ' '+profile.first_name : ''} !`;
+   bText.textContent=`Déjà ${rr.length} recommandations transmises. Pensez aussi à partager votre lien personnel avec votre entourage.`;
+   bBtn.textContent='Mon profil et mon lien'; bBtn.dataset.target='profile'; banner.dataset.kind='tip';
+ }
 }
 $('dashRecommend').onclick=()=>{
   document.querySelector('.navbtn[data-target="recommend"]')?.click();
 };
 
-$('rewardBannerBtn').onclick=()=>$('earnings').scrollIntoView({behavior:'smooth'});
+$('rewardBannerBtn').onclick=()=>{
+ const target=$('rewardBannerBtn').dataset.target||'earnings';
+ document.querySelector(`.navbtn[data-target="${target}"]`)?.click();
+};
 document.querySelectorAll('#bottomNav button').forEach(b=>b.onclick=()=>$(b.dataset.go)?.scrollIntoView({behavior:'smooth'}));
 function playNotificationTone(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.18);}catch(e){}}
 
