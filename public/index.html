@@ -229,6 +229,19 @@ body.user-authenticated #auth{display:none!important}
 @keyframes bellRing{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(11deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
 @media(prefers-reduced-motion:reduce){.bell-icon.has-unread{animation:none}}
 </style>
+<style>
+.mobile-bottom-nav{display:none}
+@media(max-width:760px){
+ body{padding-bottom:82px}
+ nav:not(#mobileRefNav) .wrap{display:none!important}
+ .mobile-bottom-nav:not(.hidden){position:fixed;z-index:999;left:10px;right:10px;bottom:10px;height:66px;background:rgba(255,255,255,.97);border:1px solid #e4e7ee;border-radius:19px;box-shadow:0 8px 30px rgba(17,27,61,.18);display:grid!important;grid-template-columns:repeat(5,1fr);padding:6px 5px calc(6px + env(safe-area-inset-bottom))}
+ .mobile-bottom-nav button{border:0;background:transparent;color:#657087;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:inherit;padding:2px}
+ .mobile-bottom-nav button span{font-size:22px;line-height:1}.mobile-bottom-nav button small{font-size:10px;font-weight:800}
+ .mobile-bottom-nav button.active{color:#e72d71}
+ #notificationsNav{display:none}
+ header .wrap{padding-left:14px;padding-right:14px}
+}
+</style>
 </head>
 <body>
 <header>
@@ -252,6 +265,13 @@ body.user-authenticated #auth{display:none!important}
 <button id="archivesNav" class="light navbtn hidden" data-target="archivesPanel">Archives</button>
 <button id="adminNav" class="light navbtn hidden" data-target="adminPanel">Tableau de bord</button>
   </div>
+</nav>
+<nav id="mobileRefNav" class="mobile-bottom-nav hidden" aria-label="Navigation mobile">
+ <button data-mobile-target="referrerDashboard"><span>⌂</span><small>Accueil</small></button>
+ <button data-mobile-target="recommend"><span>＋</span><small>Recommander</small></button>
+ <button data-mobile-target="tracking"><span>⌁</span><small>Suivi</small></button>
+ <button data-mobile-target="earnings"><span>€</span><small>Primes</small></button>
+ <button data-mobile-target="profile"><span>♙</span><small>Profil</small></button>
 </nav>
 
 <main class="wrap">
@@ -588,11 +608,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const supabase = createClient('https://oyquwmnvrsmldloveuir.supabase.co', 'sb_publishable_3iikYtMXdY3aq0FTptQQuQ_5JAhlBS0');
 const $ = id => document.getElementById(id);
 const labels = {
- new:'Nouvelle recommandation', to_contact:'À contacter', contacted:'Contact établi',
- appointment:'Rendez-vous / estimation', confirmed:'Projet confirmé', mandate:'Mandat signé',
- sold:'Bien vendu', validated:'Rémunération validée', pending:'Paiement en cours',
- paid:'Paiement effectué', closed:'Clôturé', without_follow_up:'Sans suite'
+ new:'Nouvelle recommandation', upcoming:'Projet à venir', confirmed:'Projet confirmé',
+ mandate:'Mandat signé', sold:'Bien vendu', validated:'Récompense validée',
+ pending:'Paiement en cours', paid:'Récompense payée', without_follow_up:'Projet sans suite',
+ to_contact:'Projet à venir', contacted:'Projet à venir', appointment:'Projet à venir', closed:'Projet sans suite'
 };
+const mainStatusOptions=[
+ ['new','Nouvelle recommandation'],['upcoming','Projet à venir'],['confirmed','Projet confirmé'],
+ ['mandate','Mandat signé'],['sold','Bien vendu'],['validated','Récompense validée'],
+ ['paid','Récompense payée'],['without_follow_up','Projet sans suite']
+];
 function message(t, err=false){ $('msg').textContent=t; $('msg').className='notice'+(err?' error':''); }
 function clearMessage(){ $('msg').className='notice hidden'; }
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -684,14 +709,15 @@ async function loadReferrals(){
  const {data,error}=await supabase.from('referrals').select('*').order('created_at',{ascending:false});
  if(error) return message('Impossible de charger les recommandations : '+error.message,true);
  const rows=data||[];
- const flow=['new','to_contact','contacted','appointment','confirmed','mandate','sold','validated','pending','paid'];
+ const flow=['new','upcoming','confirmed','mandate','sold','validated','paid'];
+ const normalizedStatus=s=>['to_contact','contacted','appointment'].includes(s)?'upcoming':s==='closed'?'without_follow_up':s;
  const closedStatuses=['paid','closed','without_follow_up'];
  const isClosed=r=>!!r.archived_at || closedStatuses.includes(r.status);
  const active=rows.filter(r=>!isClosed(r)), closed=rows.filter(isClosed);
  const projectLabel=r=>r.project_type==='sale'?'Vente':r.project_type==='valuation'?'Estimation':r.project_type==='advice'?'Conseils':'Autre';
  const initials=r=>((r.lead_first_name?.[0]||'')+(r.lead_last_name?.[0]||'')).toUpperCase()||'—';
  const activeCard=r=>{
-   const current=Math.max(0,flow.indexOf(r.status));
+   const current=Math.max(0,flow.indexOf(normalizedStatus(r.status)));
    const steps=flow.map((st,i)=>`<div class="step ${i<=current?'done':''}"><i></i>${labels[st]}</div>`).join('');
    return `<article class="tracking-row"><div class="tracking-contact"><span class="contact-initials">${esc(initials(r))}</span><div><strong>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</strong><small>${esc(projectLabel(r))}</small></div></div><div class="tracking-place">${esc(r.commune||'—')}</div><div><span class="status">${esc(labels[r.status]||r.status)}</span></div><div class="tracking-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div><div class="timeline tracking-timeline">${steps}</div></article>`;
  };
@@ -753,6 +779,13 @@ document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',a
   }
   document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'});
 }));
+document.querySelectorAll('[data-mobile-target]').forEach(btn=>btn.addEventListener('click',async()=>{
+ const target=btn.dataset.mobileTarget;
+ const desktop=document.querySelector(`.navbtn[data-target="${target}"]`);
+ if(desktop) desktop.click();
+ document.querySelectorAll('[data-mobile-target]').forEach(x=>x.classList.toggle('active',x===btn));
+}));
+
 $('heroRecommend').onclick=async()=>{
  const {data:{user}}=await supabase.auth.getUser();
  const target=user?'recommend':'auth';
@@ -760,18 +793,26 @@ $('heroRecommend').onclick=async()=>{
 };
 
 
-const statusOptions = Object.entries(labels).map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+const statusOptions = mainStatusOptions.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
 
 
 async function loadEarnings(){
- const {data,error}=await supabase.from('remunerations').select('*,referrals(lead_first_name,lead_last_name,commune,status)');
+ const {data,error}=await supabase.from('remunerations').select('*,referrals(lead_first_name,lead_last_name,commune,status,updated_at)');
  if(error) return;
- const rows=data||[];
- const sum=st=>rows.filter(x=>x.status===st).reduce((a,x)=>a+Number(x.amount||x.promised_amount||0),0);
- $('moneyPending').textContent=sum('pending').toLocaleString('fr-FR')+' €';
- $('moneyValidated').textContent=sum('validated').toLocaleString('fr-FR')+' €';
- $('moneyPaid').textContent=sum('paid').toLocaleString('fr-FR')+' €';
- $('earningsList').innerHTML=rows.map(x=>`<div class="payitem"><div class="row space"><strong>${x.referrals?.lead_first_name||'Projet'} ${x.referrals?.lead_last_name||''}</strong><span class="paybadge">${x.status==='paid'?'Payée':x.status==='validated'?'Validée':x.status==='cancelled'?'Annulée':'En cours'}</span></div><div class="muted">${x.referrals?.commune||''}</div><div style="font-size:22px;font-weight:800;margin-top:7px">${Number(x.amount||x.promised_amount||0).toLocaleString('fr-FR')} €</div>${x.payment_method?`<small>${x.payment_method==='bank_transfer'?'Virement bancaire':'Carte cadeau'}</small>`:''}${x.due_at?`<small> · Échéance : ${new Date(x.due_at).toLocaleDateString('fr-FR')}</small>`:''}</div>`).join('')||'<p class="muted">Aucune rémunération enregistrée pour le moment.</p>';
+ const saleStatuses=['sold','validated','pending','paid'];
+ const rows=(data||[]).filter(x=>saleStatuses.includes(x.referrals?.status));
+ const amount=x=>Number(x.amount||x.promised_amount||0);
+ const paid=rows.filter(x=>x.status==='paid').reduce((a,x)=>a+amount(x),0);
+ const validated=rows.filter(x=>x.status==='validated').reduce((a,x)=>a+amount(x),0);
+ const pending=rows.filter(x=>x.status==='pending').reduce((a,x)=>a+amount(x),0);
+ $('moneyPending').textContent=pending.toLocaleString('fr-FR')+' €';
+ $('moneyValidated').textContent=validated.toLocaleString('fr-FR')+' €';
+ $('moneyPaid').textContent=paid.toLocaleString('fr-FR')+' €';
+ const ordered=[...rows].sort((a,b)=>new Date(b.referrals?.updated_at||b.created_at)-new Date(a.referrals?.updated_at||a.created_at));
+ $('earningsList').innerHTML=ordered.map(x=>{
+   const state=x.status==='paid'?'Payée':x.status==='validated'?'Validée':x.status==='pending'?'Paiement en cours':'À venir';
+   return `<div class="payitem"><div class="row space"><strong>${x.referrals?.lead_first_name||'Projet'} ${x.referrals?.lead_last_name||''}</strong><span class="paybadge">${state}</span></div><div class="muted">${x.referrals?.commune||''}</div><div style="font-size:22px;font-weight:800;margin-top:7px">${amount(x).toLocaleString('fr-FR')} €</div>${x.payment_method?`<small>${x.payment_method==='bank_transfer'?'Virement bancaire':'Carte cadeau'}</small>`:''}${x.due_at&&x.status!=='paid'?`<small> · Échéance : ${new Date(x.due_at).toLocaleDateString('fr-FR')}</small>`:''}</div>`;
+ }).join('')||'<p class="muted">Aucune rémunération enregistrée pour le moment.</p>';
 }
 
 
@@ -1198,54 +1239,71 @@ $('resetPresentationPhoto').onclick=async()=>{const {error}=await supabase.from(
 async function refreshReferrerDashboard(profile){
  if(!profile||profile.role==='admin') return;
  const [{data:refs},{data:rems}]=await Promise.all([
-   supabase.from('referrals').select('id,status'),
-   supabase.from('remunerations').select('amount,status,referral_id')
+   supabase.from('referrals').select('id,status,lead_first_name,lead_last_name,updated_at,created_at'),
+   supabase.from('remunerations').select('amount,status,referral_id,created_at,validated_at,lgm_paid_at,due_at')
  ]);
  const rr=refs||[], rm=rems||[];
+ const refMap=Object.fromEntries(rr.map(r=>[r.id,r]));
+ const saleStatuses=['sold','validated','pending','paid'];
+ const saleRefs=rr.filter(x=>saleStatuses.includes(x.status));
+ const paidRows=rm.filter(x=>x.status==='paid' && saleStatuses.includes(refMap[x.referral_id]?.status));
+ const paidTotal=paidRows.reduce((a,x)=>a+Number(x.amount||0),0);
+
  $('dashRefs').textContent=rr.length;
- $('dashSales').textContent=rr.filter(x=>['sold','validated','pending','paid'].includes(x.status)).length;
- const won=rm.filter(x=>['validated','pending','paid'].includes(x.status)).reduce((a,x)=>a+Number(x.amount||0),0);
- $('dashRewards').textContent=won.toLocaleString('fr-FR')+' €';
+ $('dashSales').textContent=saleRefs.length;
+ $('dashRewards').textContent=paidTotal.toLocaleString('fr-FR')+' €';
 
- const available=rm.filter(x=>['validated','pending'].includes(x.status));
- const paid=rm.filter(x=>x.status==='paid');
- const mandates=rr.filter(x=>x.status==='mandate');
- const active=rr.filter(x=>!['paid','closed','without_follow_up','sold'].includes(x.status));
  const banner=$('rewardBanner'), bTitle=$('rewardBannerTitle'), bText=$('rewardBannerText'), bAmount=$('rewardBannerAmount'), bBtn=$('rewardBannerBtn');
- banner?.classList.remove('hidden');
- bAmount?.classList.add('hidden');
+ banner?.classList.remove('hidden'); bAmount?.classList.add('hidden');
 
- if(available.length){
-   const amount=available.reduce((a,x)=>a+Number(x.amount||0),0);
-   bTitle.textContent=`🎉 Excellente nouvelle${profile.first_name ? ', '+profile.first_name : ''} !`;
-   bText.textContent='Une vente a abouti. Votre récompense est disponible !';
-   bAmount.textContent=amount.toLocaleString('fr-FR')+' €'; bAmount.classList.remove('hidden');
-   bBtn.textContent='Voir ma récompense'; bBtn.dataset.target='earnings'; banner.dataset.kind='reward';
- } else if(paid.length){
-   const amount=Number(paid[0].amount||0);
-   bTitle.textContent='🎁 Récompense versée';
-   bText.textContent=`${amount ? amount.toLocaleString('fr-FR')+' € ont été versés. ' : ''}Merci pour votre confiance !`;
-   bBtn.textContent='Mes rémunérations'; bBtn.dataset.target='earnings'; banner.dataset.kind='paid';
- } else if(mandates.length){
-   bTitle.textContent='✍️ Une étape importante !';
-   bText.textContent='Un mandat a été signé grâce à l’une de vos recommandations.';
-   bBtn.textContent='Voir mes recommandations'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
- } else if(rr.length===0){
-   bTitle.textContent=`🚀 Vos premiers pas${profile.first_name ? ', '+profile.first_name : ''}`;
-   bText.textContent='Vous connaissez quelqu’un qui envisage de vendre ? Faites votre première recommandation.';
-   bBtn.textContent='Faire une recommandation'; bBtn.dataset.target='recommend'; banner.dataset.kind='welcome';
- } else if(rr.length===1){
-   bTitle.textContent='🤝 C’est parti !';
-   bText.textContent='Votre première recommandation est entre mes mains. Je vous tiens informé de son évolution.';
-   bBtn.textContent='Voir ma recommandation'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
- } else if(active.length){
-   bTitle.textContent='🏡 Vos projets avancent';
-   bText.textContent=`Vous avez ${active.length} recommandation${active.length>1?'s':''} en cours. Retrouvez leur évolution ici.`;
-   bBtn.textContent='Voir mes recommandations'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+ // Latest sale drives the banner. Never aggregate several sales in this card.
+ const latestSale=[...saleRefs].sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at))[0];
+ const latestRem=latestSale ? rm.find(x=>x.referral_id===latestSale.id) : null;
+ const amount=Number(latestRem?.amount||0);
+ const person=latestSale ? `${latestSale.lead_first_name||''} ${latestSale.lead_last_name||''}`.trim() : '';
+
+ if(latestSale){
+   if(latestRem?.status==='paid' || latestSale.status==='paid'){
+     bTitle.textContent='🎁 Récompense versée';
+     bText.textContent=`La récompense liée à ${person||'votre dernière vente'} a été payée.`;
+     if(amount){bAmount.textContent=amount.toLocaleString('fr-FR')+' €';bAmount.classList.remove('hidden');}
+     bBtn.textContent='Voir mes rémunérations'; bBtn.dataset.target='earnings'; banner.dataset.kind='paid';
+   } else if(latestRem?.status==='pending' || latestSale.status==='pending'){
+     bTitle.textContent='💳 Paiement en cours';
+     bText.textContent=`La récompense liée à ${person||'votre dernière vente'} est en cours de paiement.`;
+     if(amount){bAmount.textContent=amount.toLocaleString('fr-FR')+' €';bAmount.classList.remove('hidden');}
+     bBtn.textContent='Suivre ma rémunération'; bBtn.dataset.target='earnings'; banner.dataset.kind='reward';
+   } else if(latestRem?.status==='validated' || latestSale.status==='validated'){
+     bTitle.textContent=`🎉 Récompense validée${profile.first_name?', '+profile.first_name:''} !`;
+     bText.textContent=`La récompense liée à ${person||'votre dernière vente'} est maintenant validée.`;
+     if(amount){bAmount.textContent=amount.toLocaleString('fr-FR')+' €';bAmount.classList.remove('hidden');}
+     bBtn.textContent='Voir ma récompense'; bBtn.dataset.target='earnings'; banner.dataset.kind='reward';
+   } else {
+     bTitle.textContent=`🏡 Une vente vient d’aboutir${profile.first_name?', '+profile.first_name:''} !`;
+     bText.textContent=`${person?person+' : ':''}la vente est finalisée. ${amount?'Votre récompense prévue est affichée ci-dessous.':'Votre récompense va maintenant être calculée.'}`;
+     if(amount){bAmount.textContent=amount.toLocaleString('fr-FR')+' €';bAmount.classList.remove('hidden');}
+     bBtn.textContent='Voir la vente'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+   }
  } else {
-   bTitle.textContent=`⭐ Merci${profile.first_name ? ' '+profile.first_name : ''} !`;
-   bText.textContent=`Déjà ${rr.length} recommandations transmises. Pensez aussi à partager votre lien personnel avec votre entourage.`;
-   bBtn.textContent='Mon profil et mon lien'; bBtn.dataset.target='profile'; banner.dataset.kind='tip';
+   const mandates=rr.filter(x=>x.status==='mandate');
+   const active=rr.filter(x=>!['closed','without_follow_up'].includes(x.status));
+   if(mandates.length){
+     bTitle.textContent='✍️ Une étape importante !'; bText.textContent='Un mandat a été signé grâce à l’une de vos recommandations.';
+     bBtn.textContent='Voir mes recommandations'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+   } else if(rr.length===0){
+     bTitle.textContent=`🚀 Vos premiers pas${profile.first_name?', '+profile.first_name:''}`;
+     bText.textContent='Vous connaissez quelqu’un qui envisage de vendre ? Faites votre première recommandation.';
+     bBtn.textContent='Faire une recommandation'; bBtn.dataset.target='recommend'; banner.dataset.kind='welcome';
+   } else if(rr.length===1){
+     bTitle.textContent='🤝 C’est parti !'; bText.textContent='Votre première recommandation est entre mes mains. Je vous tiens informé de son évolution.';
+     bBtn.textContent='Voir ma recommandation'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+   } else if(active.length){
+     bTitle.textContent='🏡 Vos projets avancent'; bText.textContent=`Vous avez ${active.length} recommandation${active.length>1?'s':''} en cours. Retrouvez leur évolution ici.`;
+     bBtn.textContent='Voir mes recommandations'; bBtn.dataset.target='tracking'; banner.dataset.kind='progress';
+   } else {
+     bTitle.textContent=`⭐ Merci${profile.first_name?' '+profile.first_name:''} !`; bText.textContent=`Déjà ${rr.length} recommandations transmises.`;
+     bBtn.textContent='Mes recommandations'; bBtn.dataset.target='tracking'; banner.dataset.kind='tip';
+   }
  }
 }
 $('dashRecommend').onclick=()=>{
