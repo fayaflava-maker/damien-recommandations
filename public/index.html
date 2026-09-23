@@ -220,6 +220,15 @@ body.user-authenticated #auth{display:none!important}
 .empty-track{padding:22px 8px;color:#747d91;margin:0}.tracking-thanks{display:flex;gap:8px;flex-direction:column;padding:18px 22px;border-radius:17px;background:linear-gradient(90deg,#fff2f7,#fff);border:1px solid #f5dce7}.tracking-thanks strong{color:#e72d71;font-size:18px}
 @media(max-width:760px){.tracking-hero{align-items:flex-start;flex-direction:column}.tracking-hero h2{font-size:26px}.tracking-row,.closed-row{grid-template-columns:1fr 1fr}.tracking-timeline{grid-column:1/-1}.tracking-block{padding:14px}.tracking-title{align-items:flex-start}.tracking-title p{font-size:13px}}
 </style>
+<style>
+.notification-nav{position:relative;display:inline-flex!important;align-items:center;gap:7px}
+.bell-icon{display:inline-block;transform-origin:50% 0}
+.bell-badge{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#e72d71;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;line-height:20px;box-shadow:0 2px 8px rgba(231,45,113,.45);border:2px solid #fff}
+.bell-badge.hidden{display:none!important}
+.bell-icon.has-unread{animation:bellRing 1.25s ease-in-out infinite}
+@keyframes bellRing{0%,100%{transform:rotate(0)}15%{transform:rotate(16deg)}30%{transform:rotate(-14deg)}45%{transform:rotate(11deg)}60%{transform:rotate(-8deg)}75%{transform:rotate(4deg)}}
+@media(prefers-reduced-motion:reduce){.bell-icon.has-unread{animation:none}}
+</style>
 </head>
 <body>
 <header>
@@ -236,7 +245,7 @@ body.user-authenticated #auth{display:none!important}
     <button class="primary navbtn" data-target="recommend">Faire une recommandation</button>
     <button class="light navbtn" data-target="tracking">Mes recommandations</button>
     <button class="light navbtn" data-target="earnings">Mes rémunérations</button>
-    <button class="light navbtn" data-target="profile">Mon profil</button><button class="light navbtn" data-target="notificationsPanel">🔔 Notifications <span id="notifCount"></span></button>
+    <button class="light navbtn" data-target="profile">Mon profil</button><button id="notificationsNav" class="light navbtn notification-nav" data-target="notificationsPanel"><span id="dashBell" class="bell-icon">🔔</span><span>Notifications</span><span id="bellBadge" class="bell-badge hidden" data-count="0">0</span></button>
 <button id="contactsNav" class="light navbtn hidden" data-target="contactsPanel">Contacts recommandés</button>
 <button id="referrersNav" class="light navbtn hidden" data-target="referrersPanel">Mes apporteurs</button>
 <button id="exportsNav" class="light navbtn hidden" data-target="exportsPanel">Exports</button>
@@ -1113,11 +1122,22 @@ async function loadNotifications(){
   });
 
   const unread=(data||[]).filter(n=>!n.read_at).length;
-  const badge=$('bellBadge'), bell=$('dashBell'); const prev=Number(badge?.dataset.count||0);
-  if(badge){badge.dataset.count=unread;badge.textContent=unread;badge.classList.toggle('hidden',!unread);}
-  if(bell&&unread>prev){bell.classList.remove('bell-ring');void bell.offsetWidth;bell.classList.add('bell-ring');if(prev>0)playNotificationTone();}
+  const badge=$('bellBadge'), bell=$('dashBell');
+  const prev=Number(badge?.dataset.count||0);
+  if(badge){
+    badge.dataset.count=String(unread);
+    badge.textContent=unread>99?'99+':String(unread);
+    badge.classList.toggle('hidden',unread===0);
+  }
+  if(bell){
+    bell.classList.toggle('has-unread',unread>0);
+    if(unread>prev && prev>0) playNotificationTone();
+  }
   const nav=$('notificationsNav');
-  if(nav) nav.textContent=`🔔 Notifications${unread?` (${unread})`:''}`;
+  if(nav){
+    nav.classList.toggle('has-unread',unread>0);
+    nav.setAttribute('aria-label',unread?`Notifications, ${unread} non lue${unread>1?'s':''}`:'Notifications');
+  }
 }
 
 async function loadPresentationPhoto(){
