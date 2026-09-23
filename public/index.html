@@ -148,6 +148,12 @@
 @media(max-width:650px){.legal-scale{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+body.user-authenticated #publicHero{display:none!important}
+body.user-authenticated #auth{display:none!important}
+#sessionFooter{box-shadow:none;border:0;background:transparent;padding:16px}
+#sessionFooter #logout{min-width:160px}
+</style>
 </head>
 <body>
 <header>
@@ -160,7 +166,7 @@
 </header>
 <nav id="mainNav" class="hidden" style="position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #e5e7eb">
   <div class="wrap row" style="padding-top:10px;padding-bottom:10px;overflow-x:auto;flex-wrap:nowrap">
-    <button class="light navbtn" data-target="home">Accueil</button>
+    <button class="light navbtn" data-target="referrerDashboard">Accueil</button>
     <button class="primary navbtn" data-target="recommend">Faire une recommandation</button>
     <button class="light navbtn" data-target="tracking">Mon suivi</button>
     <button class="light navbtn" data-target="earnings">Mes rémunérations</button>
@@ -191,7 +197,7 @@
   </form>
   <div id="publicSuccess" class="hidden" style="padding:22px;background:#eef8eb;border-radius:16px;margin-top:16px"><strong>Merci ! ✓</strong><br>La recommandation a bien été transmise à Damien Royez.</div>
 </section>
-<section id="home" class="card premium-hero">
+<section id="publicHero" class="card premium-hero">
   <div class="premium-hero-inner">
     <div class="premium-copy">
       <span class="eyebrow">APPORTEURS D’AFFAIRES</span>
@@ -237,12 +243,9 @@
   </section>
 
   <section id="app" class="hidden">
-    <div class="card row space">
-      <div><strong id="welcome">Mon espace</strong><div id="role" class="muted"></div></div>
-      <button class="light" id="logout">Déconnexion</button>
-    </div>
+
+    <div class="hidden"><strong id="welcome">Mon espace</strong><div id="role"></div></div>
     <section id="referrerDashboard" class="card v14-dashboard">
-      <div class="v14-top"><div class="v14-user"><div id="dashAvatarFallback" class="v14-avatar">DR</div><img id="dashAvatar" class="v14-avatar hidden" alt="Photo de profil"><div><strong id="dashHello" style="font-size:22px">Bonjour 👋</strong><div class="muted">Suivez vos recommandations et vos récompenses.</div></div></div><button id="dashBell" class="light bell-btn" title="Notifications">🔔<span id="bellBadge" class="bell-badge hidden">0</span></button></div>
       <div id="rewardBanner" class="reward-banner hidden"><b>🎉 Félicitations ! La vente a abouti !</b><div>Votre recommandation a porté ses fruits.</div><div id="rewardBannerAmount" class="amount"></div><div>Votre récompense vous attend.</div><button id="rewardBannerBtn" class="cta-pink" style="margin-top:10px">Voir ma récompense</button></div>
       <div class="v14-stats"><div class="v14-stat"><span>Recommandations</span><b id="dashRefs">0</b></div><div class="v14-stat"><span>Ventes abouties</span><b id="dashSales">0</b></div><div class="v14-stat"><span>Récompenses gagnées</span><b id="dashRewards">0 €</b></div></div>
       <button id="dashRecommend" class="cta-pink v14-maincta">+ Recommander quelqu’un</button>
@@ -412,7 +415,10 @@
       </div>
     </section>
   </section>
-  <nav id="bottomNav" class="bottom-nav hidden"><button data-go="referrerDashboard"><span>⌂</span>Accueil</button><button data-go="recommend"><span>＋</span>Recommander</button><button data-go="tracking"><span>◉</span>Suivi</button><button data-go="profile"><span>●</span>Profil</button></nav>
+      <div id="sessionFooter" class="card" style="margin-top:28px;text-align:center">
+      <button class="light" id="logout" type="button">Déconnexion</button>
+    </div>
+<nav id="bottomNav" class="bottom-nav hidden"><button data-go="referrerDashboard"><span>⌂</span>Accueil</button><button data-go="recommend"><span>＋</span>Recommander</button><button data-go="tracking"><span>◉</span>Suivi</button><button data-go="profile"><span>●</span>Profil</button></nav>
 
 <section id="legalV13" class="card legal-card">
   <h2>Programme de recommandation & informations légales</h2>
@@ -488,14 +494,14 @@ $('login').addEventListener('click', async (ev)=>{
    btn.disabled=false; btn.textContent=oldText;
  }
 });
-$('logout').onclick=async()=>{await supabase.auth.signOut(); location.reload()};
+$('logout').onclick=async()=>{await supabase.auth.signOut(); document.body.classList.remove('user-authenticated'); location.reload()};
 $('refresh').onclick=()=>loadReferrals();
 
 async function boot(){
  if(refCode) return;
  const {data:{session}}=await supabase.auth.getSession();
  if(!session) return;
- $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); $('mainNav').classList.remove('hidden');
+ $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); $('mainNav').classList.remove('hidden'); document.body.classList.add('user-authenticated');
  const user=session.user;
  const {data:profile}=await supabase.from('profiles').select('*').eq('id',user.id).single();
  await loadPresentationPhoto();
@@ -562,7 +568,11 @@ document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',a
   }
   document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'});
 }));
-$('heroRecommend').onclick=()=>document.getElementById('recommend')?.scrollIntoView({behavior:'smooth',block:'start'});
+$('heroRecommend').onclick=async()=>{
+ const {data:{user}}=await supabase.auth.getUser();
+ const target=user?'recommend':'auth';
+ document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'});
+};
 
 
 const statusOptions = Object.entries(labels).map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
@@ -997,8 +1007,10 @@ async function refreshReferrerDashboard(profile){
  const available=rm.filter(x=>['validated','pending'].includes(x.status));
  if(available.length){const amount=available.reduce((a,x)=>a+Number(x.amount||0),0);$('rewardBannerAmount').textContent=amount.toLocaleString('fr-FR')+' €';$('rewardBanner').classList.remove('hidden');}else $('rewardBanner').classList.add('hidden');
 }
-$('dashRecommend').onclick=()=>$('recommend').scrollIntoView({behavior:'smooth'});
-$('dashBell').onclick=()=>$('notificationsPanel').scrollIntoView({behavior:'smooth'});
+$('dashRecommend').onclick=()=>{
+  document.querySelector('.navbtn[data-target="recommend"]')?.click();
+};
+
 $('rewardBannerBtn').onclick=()=>$('earnings').scrollIntoView({behavior:'smooth'});
 document.querySelectorAll('#bottomNav button').forEach(b=>b.onclick=()=>$(b.dataset.go)?.scrollIntoView({behavior:'smooth'}));
 function playNotificationTone(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.18);}catch(e){}}
