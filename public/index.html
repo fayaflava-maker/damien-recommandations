@@ -204,6 +204,22 @@ body.user-authenticated #auth{display:none!important}
 .help-action small{font-weight:500}
 @media(max-width:600px){.help-actions{grid-template-columns:1fr}}
 </style>
+<style>
+.tracking-page{display:flex;flex-direction:column;gap:20px}
+.tracking-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:8px 4px}
+.tracking-hero h2{margin:0;font-size:32px;color:#111b3d}.tracking-hero p,.tracking-title p{margin:5px 0 0;color:#69718a}
+.tracking-block{background:#fff;border:1px solid #e4e7ee;border-radius:18px;padding:20px;box-shadow:0 8px 28px rgba(24,35,65,.05)}
+.tracking-title{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.tracking-title h3{margin:0;color:#111b3d;font-size:21px}
+.count-badge{padding:8px 14px;border-radius:999px;background:#eef1f6;font-weight:800;color:#26324e}.active-count{background:#e4f7e8;color:#17823b}
+.tracking-row{display:grid;grid-template-columns:minmax(180px,1.2fr) minmax(100px,.7fr) minmax(160px,1fr) 100px;gap:14px;align-items:center;padding:16px 10px;border-top:1px solid #edf0f4}
+.tracking-row:first-child{border-top:0}.tracking-contact{display:flex;align-items:center;gap:11px}.tracking-contact small{display:block;color:#737b91;margin-top:3px}
+.contact-initials{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#edf2f8;color:#2361a8;font-weight:800;flex:0 0 44px}
+.tracking-place,.tracking-date{color:#525d77}.tracking-timeline{grid-column:1/-1;margin:3px 0 0;overflow-x:auto;padding-bottom:5px}
+.closed-row{grid-template-columns:minmax(180px,1.2fr) minmax(100px,.7fr) minmax(170px,1fr) 110px}
+.result-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border-radius:10px;font-weight:800;background:#f2f3f6}.result-badge.success{background:#e6f7ea;color:#12813b}.result-badge.neutral{background:#fff0f3;color:#c82756}
+.empty-track{padding:22px 8px;color:#747d91;margin:0}.tracking-thanks{display:flex;gap:8px;flex-direction:column;padding:18px 22px;border-radius:17px;background:linear-gradient(90deg,#fff2f7,#fff);border:1px solid #f5dce7}.tracking-thanks strong{color:#e72d71;font-size:18px}
+@media(max-width:760px){.tracking-hero{align-items:flex-start;flex-direction:column}.tracking-hero h2{font-size:26px}.tracking-row,.closed-row{grid-template-columns:1fr 1fr}.tracking-timeline{grid-column:1/-1}.tracking-block{padding:14px}.tracking-title{align-items:flex-start}.tracking-title p{font-size:13px}}
+</style>
 </head>
 <body>
 <header>
@@ -335,9 +351,20 @@ body.user-authenticated #auth{display:none!important}
       </form>
     </section>
 
-    <section id="tracking" class="card">
-      <div class="row space"><h2 style="margin:0">Mes recommandations</h2><button class="light" id="refresh">Actualiser</button></div>
-      <div id="referrals" style="margin-top:10px"></div>
+    <section id="tracking" class="tracking-page">
+      <div class="tracking-hero">
+        <div><h2>☷ Mes recommandations</h2><p>Retrouvez ici toutes vos recommandations et suivez leur avancée.</p></div>
+        <button class="cta-pink" id="trackingRecommend" type="button">＋ Faire une recommandation</button>
+      </div>
+      <div class="tracking-block">
+        <div class="tracking-title"><div><h3>◷ Mes recommandations en cours</h3><p>Recommandations actives avec leur suivi en temps réel.</p></div><span id="activeCount" class="count-badge active-count">0 en cours</span></div>
+        <div id="referralsActive"></div>
+      </div>
+      <div class="tracking-block closed-block">
+        <div class="tracking-title"><div><h3>⚑ Mes recommandations clôturées</h3><p>Recommandations finalisées avec leur résultat.</p></div><span id="closedCount" class="count-badge">0 clôturée</span></div>
+        <div id="referralsClosed"></div>
+      </div>
+      <div class="tracking-thanks"><strong>🏆 Merci pour votre confiance !</strong><span>Chaque recommandation compte et contribue à concrétiser de beaux projets immobiliers.</span></div>
     </section>
 
     <section id="earnings" class="card">
@@ -627,16 +654,31 @@ async function boot(){
 }
 
 async function loadReferrals(){
- const {data,error}=await supabase.from('referrals').select('*').is('archived_at',null).order('created_at',{ascending:false});
+ const {data,error}=await supabase.from('referrals').select('*').order('created_at',{ascending:false});
  if(error) return message('Impossible de charger les recommandations : '+error.message,true);
- if(!data?.length) return $('referrals').innerHTML='<p class="muted">Aucune recommandation pour le moment.</p>';
+ const rows=data||[];
  const flow=['new','to_contact','contacted','appointment','confirmed','mandate','sold','validated','pending','paid'];
- $('referrals').innerHTML=data.map(r=>{
-   const current=flow.indexOf(r.status);
+ const closedStatuses=['paid','closed','without_follow_up'];
+ const isClosed=r=>!!r.archived_at || closedStatuses.includes(r.status);
+ const active=rows.filter(r=>!isClosed(r)), closed=rows.filter(isClosed);
+ const projectLabel=r=>r.project_type==='sale'?'Vente':r.project_type==='valuation'?'Estimation':r.project_type==='advice'?'Conseils':'Autre';
+ const initials=r=>((r.lead_first_name?.[0]||'')+(r.lead_last_name?.[0]||'')).toUpperCase()||'—';
+ const activeCard=r=>{
+   const current=Math.max(0,flow.indexOf(r.status));
    const steps=flow.map((st,i)=>`<div class="step ${i<=current?'done':''}"><i></i>${labels[st]}</div>`).join('');
-   return `<div class="ref"><div class="row space"><strong>${r.lead_first_name} ${r.lead_last_name}</strong><span class="status">${labels[r.status]||r.status}</span></div><div class="muted">${r.commune||''} · ${r.project_type==='sale'?'Vente':r.project_type==='valuation'?'Estimation':r.project_type==='advice'?'Conseils':'Autre'}</div><div class="timeline">${steps}</div></div>`;
- }).join('');
+   return `<article class="tracking-row"><div class="tracking-contact"><span class="contact-initials">${esc(initials(r))}</span><div><strong>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</strong><small>${esc(projectLabel(r))}</small></div></div><div class="tracking-place">${esc(r.commune||'—')}</div><div><span class="status">${esc(labels[r.status]||r.status)}</span></div><div class="tracking-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div><div class="timeline tracking-timeline">${steps}</div></article>`;
+ };
+ const closedCard=r=>{
+   const successful=['sold','validated','pending','paid'].includes(r.status) || r.archive_reason==='completed';
+   const result=successful?'Bien vendu':r.status==='without_follow_up'||r.archive_reason==='without_follow_up'?'Sans suite':r.archive_reason==='abandoned'?'Projet non abouti':(labels[r.status]||'Dossier clôturé');
+   return `<article class="tracking-row closed-row"><div class="tracking-contact"><span class="contact-initials">${esc(initials(r))}</span><div><strong>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</strong><small>${esc(projectLabel(r))}</small></div></div><div class="tracking-place">${esc(r.commune||'—')}</div><div><span class="result-badge ${successful?'success':'neutral'}">${successful?'✓':'×'} ${esc(result)}</span></div><div class="tracking-date">${new Date(r.archived_at||r.created_at).toLocaleDateString('fr-FR')}</div></article>`;
+ };
+ $('activeCount').textContent=`${active.length} en cours`;
+ $('closedCount').textContent=`${closed.length} clôturée${closed.length>1?'s':''}`;
+ $('referralsActive').innerHTML=active.length?active.map(activeCard).join(''):'<p class="empty-track">Aucune recommandation en cours.</p>';
+ $('referralsClosed').innerHTML=closed.length?closed.map(closedCard).join(''):'<p class="empty-track">Aucune recommandation clôturée pour le moment.</p>';
 }
+$('trackingRecommend')?.addEventListener('click',()=>document.querySelector('.navbtn[data-target="recommend"]')?.click());
 
 $('referralForm').onsubmit=async e=>{
  e.preventDefault(); clearMessage();
