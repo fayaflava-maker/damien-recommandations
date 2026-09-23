@@ -553,7 +553,16 @@ $('referralForm').onsubmit=async e=>{
 };
 
 document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',async()=>{
-  const target=btn.dataset.target;
+    const target=btn.dataset.target;
+    const refSections=['referrerDashboard','recommend','tracking','earnings','profile','notificationsPanel'];
+    if(refSections.includes(target)){
+      refSections.forEach(id=>$(id)?.classList.add('hidden'));
+      $(target)?.classList.remove('hidden');
+      document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('primary'));
+      btn.classList.add('primary');
+    }
+
+  
   const adminTargets=['adminPanel','contactsPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'];
   if(adminTargets.includes(target)){
     adminTargets.forEach(id=>$(id)?.classList.add('hidden'));
@@ -987,13 +996,16 @@ async function uploadImage(file,path){
 async function setupV14Profile(profile,user){
  if(!profile||!user) return;
  if(profile.role!=='admin'){
+    ['recommend','tracking','earnings','profile','notificationsPanel'].forEach(id=>$(id)?.classList.add('hidden'));
+    $('referrerDashboard')?.classList.remove('hidden');
+
    $('bottomNav')?.classList.remove('hidden');
-   $('dashHello').textContent=`Bonjour ${profile.first_name||''} 👋`;
-   if(profile.avatar_url){$('dashAvatar').src=profile.avatar_url;$('dashAvatar').classList.remove('hidden');$('dashAvatarFallback').classList.add('hidden');$('profileAvatarPreview').src=profile.avatar_url;}
+   $('dashHello') && ($('dashHello').textContent=`Bonjour ${profile.first_name||''} 👋`);
+   if(profile.avatar_url){$('dashAvatar') && ($('dashAvatar').src=profile.avatar_url);$('dashAvatar')?.classList.remove('hidden');$('dashAvatarFallback')?.classList.add('hidden');$('profileAvatarPreview').src=profile.avatar_url;}
    else {$('profileAvatarPreview').src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="100%" height="100%" fill="#edf7ea"/><text x="50%" y="55%" text-anchor="middle" font-size="54" font-family="Arial" fill="#34752a">${(profile.first_name?.[0]||'')+(profile.last_name?.[0]||'')}</text></svg>`);}
  }
 }
-$('uploadProfileAvatar').onclick=async()=>{try{const {data:{user}}=await supabase.auth.getUser();const url=await uploadImage($('profileAvatarFile').files[0],`avatars/${user.id}/profile`);const {error}=await supabase.from('profiles').update({avatar_url:url}).eq('id',user.id);if(error)throw error;$('profileAvatarPreview').src=url;$('dashAvatar').src=url;$('dashAvatar').classList.remove('hidden');$('dashAvatarFallback').classList.add('hidden');message('Photo de profil mise à jour.');}catch(e){message(e.message,true)}};
+$('uploadProfileAvatar').onclick=async()=>{try{const {data:{user}}=await supabase.auth.getUser();const url=await uploadImage($('profileAvatarFile').files[0],`avatars/${user.id}/profile`);const {error}=await supabase.from('profiles').update({avatar_url:url}).eq('id',user.id);if(error)throw error;$('profileAvatarPreview').src=url;$('dashAvatar') && ($('dashAvatar').src=url);$('dashAvatar')?.classList.remove('hidden');$('dashAvatarFallback')?.classList.add('hidden');message('Photo de profil mise à jour.');}catch(e){message(e.message,true)}};
 $('uploadPresentationPhoto').onclick=async()=>{try{const url=await uploadImage($('adminPresentationFile').files[0],`presentation/damien`);const {error}=await supabase.from('app_settings').update({presentation_photo_url:url,updated_at:new Date().toISOString()}).eq('id','main');if(error)throw error;await loadPresentationPhoto();message('Photo de présentation mise à jour.');}catch(e){message(e.message,true)}};
 $('resetPresentationPhoto').onclick=async()=>{const {error}=await supabase.from('app_settings').update({presentation_photo_url:null,updated_at:new Date().toISOString()}).eq('id','main');if(error)return message(error.message,true);await loadPresentationPhoto();message('Photo de présentation restaurée.');};
 async function refreshReferrerDashboard(profile){
