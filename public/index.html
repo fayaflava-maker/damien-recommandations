@@ -634,6 +634,22 @@ $('login').addEventListener('click', async (ev)=>{
 $('logout').onclick=async()=>{await supabase.auth.signOut(); document.body.classList.remove('user-authenticated'); location.reload()};
 $('refresh')?.addEventListener('click',loadReferrals);
 
+let currentProfile=null;
+let referrerRealtimeChannel=null;
+
+async function refreshReferrerInterface(){
+  if(!currentProfile || currentProfile.role==='admin') return;
+  await Promise.all([loadReferrals(),loadEarnings(),loadNotifications()]);
+  await refreshReferrerDashboard(currentProfile);
+}
+function setupReferrerRealtime(user,profile){
+  if(!user || !profile || profile.role==='admin' || referrerRealtimeChannel) return;
+  referrerRealtimeChannel=supabase.channel('referrer-ui-'+user.id)
+    .on('postgres_changes',{event:'*',schema:'public',table:'referrals',filter:`referrer_id=eq.${user.id}`},()=>refreshReferrerInterface())
+    .on('postgres_changes',{event:'*',schema:'public',table:'remunerations'},()=>refreshReferrerInterface())
+    .on('postgres_changes',{event:'*',schema:'public',table:'notifications',filter:`user_id=eq.${user.id}`},()=>loadNotifications())
+    .subscribe();
+}
 async function boot(){
  if(refCode) return;
  const {data:{session}}=await supabase.auth.getSession();
@@ -641,12 +657,14 @@ async function boot(){
  $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); $('mainNav').classList.remove('hidden'); document.body.classList.add('user-authenticated');
  const user=session.user;
  const {data:profile}=await supabase.from('profiles').select('*').eq('id',user.id).single();
+ currentProfile=profile;
  await loadPresentationPhoto();
  if(new URLSearchParams(location.search).get('confirmed')==='1'){message('✅ Adresse e-mail confirmée, bienvenue !'); history.replaceState({},'',location.pathname);}
  $('welcome').textContent = profile ? `Bonjour ${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Mon espace';
  $('role').textContent = profile?.role==='admin' ? 'Administration' : 'Apporteur d’affaires';
  await setupOnboarding(profile,user); await setupShareLink(profile,user); await adminNotificationPulse(profile);
  await setupV14Profile(profile,user);
+ setupReferrerRealtime(user,profile);
  if(profile?.role==='admin'){
    $('adminNav').classList.remove('hidden'); $('contactsNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden'); $('exportsNav').classList.remove('hidden'); $('archivesNav').classList.remove('hidden');
    // Admin has a dedicated workspace: hide apporteur-facing views.
@@ -712,6 +730,12 @@ document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',a
       $(target)?.classList.remove('hidden');
       document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('primary'));
       btn.classList.add('primary');
+      if(currentProfile?.role!=='admin'){
+        if(target==='referrerDashboard') await refreshReferrerDashboard(currentProfile);
+        if(target==='tracking') await loadReferrals();
+        if(target==='earnings') await loadEarnings();
+        if(target==='notificationsPanel') await loadNotifications();
+      }
     }
 
   
@@ -1234,6 +1258,10 @@ $('rewardBannerBtn').onclick=()=>{
 };
 document.querySelectorAll('#bottomNav button').forEach(b=>b.onclick=()=>$(b.dataset.go)?.scrollIntoView({behavior:'smooth'}));
 function playNotificationTone(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.18);}catch(e){}}
+
+
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') refreshReferrerInterface();});
+window.addEventListener('focus',()=>refreshReferrerInterface());
 
 const refCode=new URLSearchParams(location.search).get('ref');
 async function initPublicReferral(){
