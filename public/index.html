@@ -190,6 +190,20 @@ body.user-authenticated #auth{display:none!important}
 .legal-accordion[open] summary::after{transform:rotate(90deg)}
 .legal-accordion-body{padding:0 4px 14px}
 </style>
+<style>
+.help-card{padding:10px 14px!important}
+.help-accordion summary{cursor:pointer;list-style:none;padding:14px 4px}
+.help-accordion summary::-webkit-details-marker{display:none}
+.help-accordion summary strong{display:flex;justify-content:space-between;gap:12px}
+.help-accordion summary strong span{color:#d83878}
+.help-body{padding:4px 4px 14px}
+.help-person{display:flex;align-items:center;gap:12px}
+.help-person img{width:52px;height:52px;border-radius:50%;object-fit:cover}
+.help-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.help-action{text-decoration:none;text-align:center;display:block;padding:12px;border-radius:12px}
+.help-action small{font-weight:500}
+@media(max-width:600px){.help-actions{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header>
@@ -471,13 +485,37 @@ body.user-authenticated #auth{display:none!important}
     </div>
 <nav id="bottomNav" class="bottom-nav hidden"><button data-go="referrerDashboard"><span>⌂</span>Accueil</button><button data-go="recommend"><span>＋</span>Recommander</button><button data-go="tracking"><span>◉</span>Suivi</button><button data-go="profile"><span>●</span>Profil</button></nav>
 
+<section id="helpContact" class="card help-card">
+  <details class="help-accordion">
+    <summary><strong>Besoin d’aide ? <span>Contactez-moi</span></strong></summary>
+    <div class="help-body">
+      <div class="help-person">
+        <img src="/damien-royez.jpg" alt="Damien Royez">
+        <div><strong>Damien ROYEZ</strong><div class="muted">Votre conseiller immobilier</div></div>
+      </div>
+      <p>Une difficulté avec votre compte ou une recommandation ? Je suis disponible pour vous aider.</p>
+      <div class="help-actions">
+        <a class="cta-pink help-action" href="tel:+33778253065">📞 Appeler Damien<br><small>07 78 25 30 65</small></a>
+        <a class="light help-action" href="mailto:damien.royez@lgm-immobilier.fr">✉️ Envoyer un e-mail<br><small>damien.royez@lgm-immobilier.fr</small></a>
+      </div>
+    </div>
+  </details>
+</section>
+
 <section id="legalV13" class="card legal-card compact-legal">
   <details class="legal-accordion">
-    <summary><strong>Programme de recommandation & barème de la prime</strong></summary>
+    <summary><strong>Mentions légales</strong></summary>
     <div class="legal-accordion-body">
       <p><strong>Damien ROYEZ – Entrepreneur individuel (EI)</strong><br>
-      Conseiller immobilier · RSAC Montpellier 908 588 726 · SIRET 908 588 726 00012.</p>
-      <p>Cette application et le programme de recommandation sont exploités par Damien ROYEZ pour son propre compte. LGM Immobilier n’est pas l’éditeur ni l’exploitant de cette application.</p>
+      Conseiller immobilier · RSAC Montpellier 908 588 726 · SIRET 908 588 726 00012.<br>
+      Contact : 07 78 25 30 65 · damien.royez@lgm-immobilier.fr</p>
+      <p>Cette application est éditée et exploitée par Damien ROYEZ pour son propre compte. LGM Immobilier n’est ni l’éditeur ni l’exploitant de cette application.</p>
+    </div>
+  </details>
+  <details class="legal-accordion">
+    <summary><strong>CGU & conditions du programme</strong></summary>
+    <div class="legal-accordion-body">
+      <p>Le programme permet à un apporteur de transmettre les coordonnées d’une personne susceptible d’avoir un projet immobilier, puis d’en suivre l’avancement et, lorsque les conditions sont réunies, la rémunération associée.</p>
       <h3>Barème de la prime</h3>
       <div class="legal-scale">
         <span>≤ 5 000 € → <b>100 €</b></span><span>5 001–10 000 € → <b>250 €</b></span>
@@ -489,9 +527,15 @@ body.user-authenticated #auth{display:none!important}
     </div>
   </details>
   <details class="legal-accordion">
-    <summary><strong>Confidentialité & données personnelles</strong></summary>
+    <summary><strong>RGPD · Confidentialité & données personnelles</strong></summary>
     <div class="legal-accordion-body">
-      <p>Les coordonnées renseignées servent à gérer le compte apporteur, les recommandations, leur suivi et les rémunérations. Lorsqu’une recommandation concerne un tiers, l’apporteur confirme l’avoir informé de la transmission de ses coordonnées à Damien ROYEZ dans le cadre de son projet immobilier.</p>
+      <p><strong>Responsable du traitement :</strong> Damien ROYEZ, entrepreneur individuel.</p>
+      <p>Les données sont utilisées pour créer et gérer le compte apporteur, traiter et suivre les recommandations, contacter les personnes recommandées, gérer les rémunérations, sécuriser le service et répondre aux obligations administratives, comptables et légales applicables.</p>
+      <p>Lorsqu’une recommandation concerne un tiers, l’apporteur confirme l’avoir informé de la transmission de ses coordonnées à Damien ROYEZ. La personne recommandée est informée de l’origine et de l’utilisation de ses données lors du premier contact.</p>
+      <p>Les données ne sont pas vendues. Elles sont accessibles uniquement aux personnes et prestataires nécessaires au fonctionnement du service ou au respect des obligations applicables.</p>
+      <p>Les données sont conservées pendant la durée nécessaire à la gestion du compte, de la recommandation et de la rémunération, puis archivées lorsque les obligations légales, comptables, fiscales ou la gestion d’éventuelles réclamations l’exigent.</p>
+      <p>Vous pouvez demander l’accès, la rectification, l’effacement, la limitation ou l’opposition au traitement de vos données, ainsi que leur portabilité lorsque ce droit s’applique. Vous pouvez retirer votre consentement lorsqu’un traitement repose sur celui-ci.</p>
+      <p>Pour exercer vos droits : <strong>damien.royez@lgm-immobilier.fr</strong>. Une vérification d’identité peut être demandée lorsque cela est nécessaire. Vous pouvez également introduire une réclamation auprès de la CNIL.</p>
     </div>
   </details>
 </section>
