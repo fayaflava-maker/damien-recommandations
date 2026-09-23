@@ -623,7 +623,7 @@ $('login').addEventListener('click', async (ev)=>{
  }
 });
 $('logout').onclick=async()=>{await supabase.auth.signOut(); document.body.classList.remove('user-authenticated'); location.reload()};
-$('refresh').onclick=()=>loadReferrals();
+$('refresh')?.addEventListener('click',loadReferrals);
 
 async function boot(){
  if(refCode) return;
@@ -641,7 +641,7 @@ async function boot(){
  if(profile?.role==='admin'){
    $('adminNav').classList.remove('hidden'); $('contactsNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden'); $('exportsNav').classList.remove('hidden'); $('archivesNav').classList.remove('hidden');
    // Admin has a dedicated workspace: hide apporteur-facing views.
-   ['home','recommend','tracking','earnings','profile'].forEach(id=>$(id)?.classList.add('hidden'));
+   ['publicHero','recommend','tracking','earnings','profile'].forEach(id=>$(id)?.classList.add('hidden'));
    document.querySelectorAll('.navbtn').forEach(b=>{
      if(!['adminPanel','contactsPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
    });
@@ -1219,7 +1219,7 @@ const refCode=new URLSearchParams(location.search).get('ref');
 async function initPublicReferral(){
  if(!refCode) return;
  $('publicReferral').classList.remove('hidden');
- $('home').classList.add('hidden');
+ $('publicHero')?.classList.add('hidden');
  $('auth').classList.add('hidden');
  $('app').classList.add('hidden');
  $('mainNav').classList.add('hidden');
