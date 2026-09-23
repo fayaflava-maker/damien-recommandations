@@ -136,7 +136,11 @@
     .leader-card{display:grid;grid-template-columns:42px 1.3fr repeat(4,.7fr);gap:10px;align-items:center;border-bottom:1px solid #edf0f2;padding:13px 5px}
     .leader-card small{display:block;color:#7a8491}.leader-card .metric{text-align:center}.leader-card .metric b{display:block;font-size:17px}
     @media(max-width:700px){.leader-card{grid-template-columns:38px 1fr 1fr}.leader-card .metric:nth-of-type(n+3){display:none}.leader-summary{grid-template-columns:1fr 1fr}.leader-summary>div:last-child{grid-column:1/-1}}
-  </style>
+  
+.v14-dashboard{padding:24px!important}.v14-top{display:flex;justify-content:space-between;align-items:center;gap:14px}.v14-user{display:flex;align-items:center;gap:12px}.v14-avatar{width:58px;height:58px;border-radius:50%;object-fit:cover;background:#edf7ea;display:grid;place-items:center;font-weight:900;color:#34752a;font-size:20px}.v14-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.v14-stat{background:#f7f9fb;border-radius:15px;padding:14px}.v14-stat span{display:block;font-size:12px;color:#727d8c}.v14-stat b{display:block;font-size:24px;margin-top:4px}.v14-maincta{width:100%;font-size:16px;padding:16px!important}.bell-btn{position:relative;width:46px;height:46px;padding:0!important;border-radius:50%!important;font-size:21px}.bell-badge{position:absolute;right:-4px;top:-5px;min-width:20px;height:20px;padding:0 5px;border-radius:99px;background:#d83878;color:white;font-size:11px;display:grid;place-items:center}.bell-ring{animation:bellring .65s ease-in-out 3;transform-origin:50% 0}@keyframes bellring{0%,100%{transform:rotate(0)}25%{transform:rotate(15deg)}75%{transform:rotate(-15deg)}}
+.reward-banner{background:linear-gradient(135deg,#fff4d7,#fff);border:1px solid #efd78f;border-radius:18px;padding:18px;margin:0 0 16px;box-shadow:0 7px 22px rgba(128,93,0,.08)}.reward-banner b{font-size:20px;color:#0b1930}.reward-banner .amount{font-size:30px;color:#d83878;font-weight:900;margin:5px 0}.avatar-editor{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:14px 0}.avatar-editor img{width:82px;height:82px;border-radius:50%;object-fit:cover;background:#eef0f3}.admin-personalize{border:1px solid #e5e7eb;border-radius:18px;padding:18px;margin:18px 0;background:#fafbfc}.admin-personalize img{width:130px;height:130px;object-fit:cover;border-radius:18px}.bottom-nav{display:none}
+@media(max-width:700px){.v14-stats{grid-template-columns:repeat(3,1fr)}.v14-stat{padding:11px 8px}.v14-stat b{font-size:20px}.bottom-nav{display:flex;position:fixed;left:10px;right:10px;bottom:10px;z-index:50;background:#fff;border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 10px 35px rgba(0,0,0,.14);padding:7px;justify-content:space-around}.bottom-nav button{background:transparent;padding:7px 8px;font-size:11px}.bottom-nav button span{display:block;font-size:20px;margin-bottom:2px}body{padding-bottom:82px}#mainNav .wrap{display:none}}
+</style>
 
 <style>
 .legal-card{max-width:1100px;margin:24px auto}.legal-scale{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
@@ -199,7 +203,7 @@
       <div class="trustline"><span>✓ Simple</span><span>✓ Suivi en temps réel</span><span>✓ Transparent</span></div>
     </div>
     <div class="portrait-wrap">
-      <img src="/damien-royez.jpg" alt="Damien Royez">
+      <img id="presentationPhoto" src="/damien-royez.jpg" alt="Damien Royez">
       <div class="portrait-badge"><strong>Damien ROYEZ</strong><span>Conseiller de proximité · Pic Saint-Loup</span></div>
     </div>
   </div>
@@ -237,6 +241,12 @@
       <div><strong id="welcome">Mon espace</strong><div id="role" class="muted"></div></div>
       <button class="light" id="logout">Déconnexion</button>
     </div>
+    <section id="referrerDashboard" class="card v14-dashboard">
+      <div class="v14-top"><div class="v14-user"><div id="dashAvatarFallback" class="v14-avatar">DR</div><img id="dashAvatar" class="v14-avatar hidden" alt="Photo de profil"><div><strong id="dashHello" style="font-size:22px">Bonjour 👋</strong><div class="muted">Suivez vos recommandations et vos récompenses.</div></div></div><button id="dashBell" class="light bell-btn" title="Notifications">🔔<span id="bellBadge" class="bell-badge hidden">0</span></button></div>
+      <div id="rewardBanner" class="reward-banner hidden"><b>🎉 Félicitations ! La vente a abouti !</b><div>Votre recommandation a porté ses fruits.</div><div id="rewardBannerAmount" class="amount"></div><div>Votre récompense vous attend.</div><button id="rewardBannerBtn" class="cta-pink" style="margin-top:10px">Voir ma récompense</button></div>
+      <div class="v14-stats"><div class="v14-stat"><span>Recommandations</span><b id="dashRefs">0</b></div><div class="v14-stat"><span>Ventes abouties</span><b id="dashSales">0</b></div><div class="v14-stat"><span>Récompenses gagnées</span><b id="dashRewards">0 €</b></div></div>
+      <button id="dashRecommend" class="cta-pink v14-maincta">+ Recommander quelqu’un</button>
+    </section>
 
     <section id="recommend" class="card">
       <h2>Faire une recommandation</h2>
@@ -275,7 +285,7 @@
 
     <section id="profile" class="card">
       <h2>Mon profil</h2>
-      <div id="profileInfo" class="muted">Vos informations de compte apparaîtront ici.</div><div id="onboardingBox" class="onboard hidden">
+      <div class="avatar-editor"><img id="profileAvatarPreview" alt="Photo de profil"><div><strong>Photo de profil</strong><div class="muted" style="font-size:12px">JPG, PNG ou WebP · 5 Mo maximum</div><input id="profileAvatarFile" type="file" accept="image/jpeg,image/png,image/webp" style="margin:8px 0"><button id="uploadProfileAvatar" class="light" type="button">Changer ma photo</button></div></div><div id="profileInfo" class="muted">Vos informations de compte apparaîtront ici.</div><div id="onboardingBox" class="onboard hidden">
         <div class="welcome">Bienvenue dans votre espace 👋</div>
         <div class="muted">Complétez votre profil pour activer pleinement votre espace apporteur.</div>
         <div class="onboard-progress"><span id="onboardBar" style="width:33%"></span></div>
@@ -375,6 +385,8 @@
         </div>
       </div>
 
+      <div class="admin-personalize"><h3 style="margin-top:0">Personnalisation de l’application</h3><div class="row"><img id="adminPresentationPreview" src="/damien-royez.jpg" alt="Photo de présentation"><div style="flex:1;min-width:220px"><strong>Photo de présentation</strong><p class="muted">Modifiez la photo affichée sur la page d’accueil sans redéployer l’application.</p><input id="adminPresentationFile" type="file" accept="image/jpeg,image/png,image/webp"><div class="row"><button id="uploadPresentationPhoto" class="primary" type="button">Mettre à jour la photo</button><button id="resetPresentationPhoto" class="light" type="button">Photo par défaut</button></div></div></div></div>
+
       <div class="admin-kpis">
         <div class="admin-kpi"><span>Recommandations</span><b id="kpiRefs">0</b></div>
         <div class="admin-kpi"><span>Mandats / ventes</span><b id="kpiSales">0</b></div>
@@ -400,6 +412,7 @@
       </div>
     </section>
   </section>
+  <nav id="bottomNav" class="bottom-nav hidden"><button data-go="referrerDashboard"><span>⌂</span>Accueil</button><button data-go="recommend"><span>＋</span>Recommander</button><button data-go="tracking"><span>◉</span>Suivi</button><button data-go="profile"><span>●</span>Profil</button></nav>
 
 <section id="legalV13" class="card legal-card">
   <h2>Programme de recommandation & informations légales</h2>
@@ -450,8 +463,8 @@ $('signup').onclick=async()=>{
  if(!$('signupTerms').checked) return message('Vous devez accepter les conditions du programme, les CGU et la politique de confidentialité.',true);
  const {data,error}=await supabase.auth.signUp({
    email:$('email').value.trim(), password:$('password').value,
-   options:{data:{first_name:first,last_name:last,phone,address,postal_code:postal,city,
-     terms_version:'v13-2026-09-22',terms_accepted:'true'}}
+   options:{emailRedirectTo:location.origin+'/?confirmed=1',data:{first_name:first,last_name:last,phone,address,postal_code:postal,city,
+     terms_version:'v14-2026-09-23',terms_accepted:'true'}}
  });
  if(error) return message(error.message,true);
  message(data.session ? 'Compte créé et connecté.' : 'Compte créé. Vérifiez votre email pour confirmer votre inscription.');
@@ -485,9 +498,12 @@ async function boot(){
  $('auth').classList.add('hidden'); $('app').classList.remove('hidden'); $('mainNav').classList.remove('hidden');
  const user=session.user;
  const {data:profile}=await supabase.from('profiles').select('*').eq('id',user.id).single();
+ await loadPresentationPhoto();
+ if(new URLSearchParams(location.search).get('confirmed')==='1'){message('✅ Adresse e-mail confirmée, bienvenue !'); history.replaceState({},'',location.pathname);}
  $('welcome').textContent = profile ? `Bonjour ${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Mon espace';
  $('role').textContent = profile?.role==='admin' ? 'Administration' : 'Apporteur d’affaires';
  await setupOnboarding(profile,user); await setupShareLink(profile,user); await adminNotificationPulse(profile);
+ await setupV14Profile(profile,user);
  if(profile?.role==='admin'){
    $('adminNav').classList.remove('hidden'); $('contactsNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden'); $('exportsNav').classList.remove('hidden'); $('archivesNav').classList.remove('hidden');
    // Admin has a dedicated workspace: hide apporteur-facing views.
@@ -495,11 +511,12 @@ async function boot(){
    document.querySelectorAll('.navbtn').forEach(b=>{
      if(!['adminPanel','contactsPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
    });
+   $('referrerDashboard').classList.add('hidden'); $('bottomNav').classList.add('hidden');
    $('adminPanel').classList.remove('hidden');
    await loadAdmin(); await loadReferrers();
  }
  $('profileInfo').innerHTML = profile ? `<strong>${esc(profile.first_name)} ${esc(profile.last_name)}</strong><br>${esc(profile.email||session.user.email||'')}<br>${esc(profile.phone||'')}<br>${esc(profile.address||'')}<br>${esc(profile.postal_code||'')} ${esc(profile.city||'')}` : esc(session.user.email);
- await loadReferrals(); await loadNotifications(); await loadEarnings();
+ await loadReferrals(); await loadNotifications(); await loadEarnings(); await refreshReferrerDashboard(profile);
 }
 
 async function loadReferrals(){
@@ -934,9 +951,58 @@ async function loadNotifications(){
   });
 
   const unread=(data||[]).filter(n=>!n.read_at).length;
+  const badge=$('bellBadge'), bell=$('dashBell'); const prev=Number(badge?.dataset.count||0);
+  if(badge){badge.dataset.count=unread;badge.textContent=unread;badge.classList.toggle('hidden',!unread);}
+  if(bell&&unread>prev){bell.classList.remove('bell-ring');void bell.offsetWidth;bell.classList.add('bell-ring');if(prev>0)playNotificationTone();}
   const nav=$('notificationsNav');
   if(nav) nav.textContent=`🔔 Notifications${unread?` (${unread})`:''}`;
 }
+
+async function loadPresentationPhoto(){
+ const {data}=await supabase.from('app_settings').select('presentation_photo_url').eq('id','main').maybeSingle();
+ const url=data?.presentation_photo_url||'/damien-royez.jpg';
+ if($('presentationPhoto')) $('presentationPhoto').src=url;
+ if($('adminPresentationPreview')) $('adminPresentationPreview').src=url;
+}
+async function uploadImage(file,path){
+ if(!file) throw new Error('Sélectionnez une image.');
+ if(file.size>5*1024*1024) throw new Error('La photo dépasse 5 Mo.');
+ const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+ const full=path+'.'+ext;
+ const {error}=await supabase.storage.from('profile-images').upload(full,file,{upsert:true,contentType:file.type});
+ if(error) throw error;
+ const {data}=supabase.storage.from('profile-images').getPublicUrl(full);
+ return data.publicUrl+'?v='+Date.now();
+}
+async function setupV14Profile(profile,user){
+ if(!profile||!user) return;
+ if(profile.role!=='admin'){
+   $('bottomNav')?.classList.remove('hidden');
+   $('dashHello').textContent=`Bonjour ${profile.first_name||''} 👋`;
+   if(profile.avatar_url){$('dashAvatar').src=profile.avatar_url;$('dashAvatar').classList.remove('hidden');$('dashAvatarFallback').classList.add('hidden');$('profileAvatarPreview').src=profile.avatar_url;}
+   else {$('profileAvatarPreview').src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="100%" height="100%" fill="#edf7ea"/><text x="50%" y="55%" text-anchor="middle" font-size="54" font-family="Arial" fill="#34752a">${(profile.first_name?.[0]||'')+(profile.last_name?.[0]||'')}</text></svg>`);}
+ }
+}
+$('uploadProfileAvatar').onclick=async()=>{try{const {data:{user}}=await supabase.auth.getUser();const url=await uploadImage($('profileAvatarFile').files[0],`avatars/${user.id}/profile`);const {error}=await supabase.from('profiles').update({avatar_url:url}).eq('id',user.id);if(error)throw error;$('profileAvatarPreview').src=url;$('dashAvatar').src=url;$('dashAvatar').classList.remove('hidden');$('dashAvatarFallback').classList.add('hidden');message('Photo de profil mise à jour.');}catch(e){message(e.message,true)}};
+$('uploadPresentationPhoto').onclick=async()=>{try{const url=await uploadImage($('adminPresentationFile').files[0],`presentation/damien`);const {error}=await supabase.from('app_settings').update({presentation_photo_url:url,updated_at:new Date().toISOString()}).eq('id','main');if(error)throw error;await loadPresentationPhoto();message('Photo de présentation mise à jour.');}catch(e){message(e.message,true)}};
+$('resetPresentationPhoto').onclick=async()=>{const {error}=await supabase.from('app_settings').update({presentation_photo_url:null,updated_at:new Date().toISOString()}).eq('id','main');if(error)return message(error.message,true);await loadPresentationPhoto();message('Photo de présentation restaurée.');};
+async function refreshReferrerDashboard(profile){
+ if(!profile||profile.role==='admin') return;
+ const [{data:refs},{data:rems}]=await Promise.all([supabase.from('referrals').select('id,status'),supabase.from('remunerations').select('amount,status,referral_id')]);
+ const rr=refs||[], rm=rems||[];
+ $('dashRefs').textContent=rr.length;
+ $('dashSales').textContent=rr.filter(x=>['sold','validated','pending','paid'].includes(x.status)).length;
+ const won=rm.filter(x=>['validated','pending','paid'].includes(x.status)).reduce((a,x)=>a+Number(x.amount||0),0);
+ $('dashRewards').textContent=won.toLocaleString('fr-FR')+' €';
+ const available=rm.filter(x=>['validated','pending'].includes(x.status));
+ if(available.length){const amount=available.reduce((a,x)=>a+Number(x.amount||0),0);$('rewardBannerAmount').textContent=amount.toLocaleString('fr-FR')+' €';$('rewardBanner').classList.remove('hidden');}else $('rewardBanner').classList.add('hidden');
+}
+$('dashRecommend').onclick=()=>$('recommend').scrollIntoView({behavior:'smooth'});
+$('dashBell').onclick=()=>$('notificationsPanel').scrollIntoView({behavior:'smooth'});
+$('rewardBannerBtn').onclick=()=>$('earnings').scrollIntoView({behavior:'smooth'});
+document.querySelectorAll('#bottomNav button').forEach(b=>b.onclick=()=>$(b.dataset.go)?.scrollIntoView({behavior:'smooth'}));
+function playNotificationTone(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;const c=new C(),o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.setValueAtTime(.04,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.18);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.18);}catch(e){}}
+
 const refCode=new URLSearchParams(location.search).get('ref');
 async function initPublicReferral(){
  if(!refCode) return;
