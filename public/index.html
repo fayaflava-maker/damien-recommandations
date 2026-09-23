@@ -180,6 +180,16 @@ body.user-authenticated #auth{display:none!important}
 .smart-banner[data-kind="paid"]{background:#f7f3ff}
 .smart-banner[data-kind="tip"]{background:#faf8f0}
 </style>
+<style>
+.compact-legal{padding:10px 14px!important}
+.legal-accordion{border-bottom:1px solid #e5e7eb}
+.legal-accordion:last-child{border-bottom:0}
+.legal-accordion summary{cursor:pointer;list-style:none;padding:14px 4px;display:flex;align-items:center;justify-content:space-between}
+.legal-accordion summary::-webkit-details-marker{display:none}
+.legal-accordion summary::after{content:"›";font-size:24px;line-height:1;transition:transform .2s ease}
+.legal-accordion[open] summary::after{transform:rotate(90deg)}
+.legal-accordion-body{padding:0 4px 14px}
+</style>
 </head>
 <body>
 <header>
@@ -461,23 +471,29 @@ body.user-authenticated #auth{display:none!important}
     </div>
 <nav id="bottomNav" class="bottom-nav hidden"><button data-go="referrerDashboard"><span>⌂</span>Accueil</button><button data-go="recommend"><span>＋</span>Recommander</button><button data-go="tracking"><span>◉</span>Suivi</button><button data-go="profile"><span>●</span>Profil</button></nav>
 
-<section id="legalV13" class="card legal-card">
-  <h2>Programme de recommandation & informations légales</h2>
-  <p><strong>Damien ROYEZ – Entrepreneur individuel (EI)</strong><br>
-  Conseiller immobilier · RSAC Montpellier 908 588 726 · SIRET 908 588 726 00012.</p>
-  <p>Cette application et le programme de recommandation sont exploités par Damien ROYEZ pour son propre compte. LGM Immobilier n’est pas l’éditeur ni l’exploitant de cette application.</p>
-  <h3>Barème de la prime</h3>
-  <div class="legal-scale">
-    <span>≤ 5 000 € → <b>100 €</b></span><span>5 001–10 000 € → <b>250 €</b></span>
-    <span>10 001–15 000 € → <b>500 €</b></span><span>15 001–20 000 € → <b>750 €</b></span>
-    <span>20 001–25 000 € → <b>1 000 €</b></span><span>25 001–30 000 € → <b>1 250 €</b></span>
-    <span>&gt; 30 000 € → <b>1 500 €</b></span>
-  </div>
-  <p class="muted">Le barème est calculé à partir de la rémunération effectivement versée par LGM Immobilier à Damien ROYEZ au titre de la transaction concernée. La prime est réglée par Damien ROYEZ par virement bancaire ou carte cadeau dans un délai maximum de 10 jours suivant ce versement, sous réserve des conditions du programme.</p>
-  <details><summary><strong>Confidentialité & données personnelles</strong></summary>
-    <p>Les coordonnées renseignées servent à gérer le compte apporteur, les recommandations, leur suivi et les rémunérations. Lorsqu’une recommandation concerne un tiers, l’apporteur confirme l’avoir informé de la transmission de ses coordonnées à Damien ROYEZ dans le cadre de son projet immobilier.</p>
+<section id="legalV13" class="card legal-card compact-legal">
+  <details class="legal-accordion">
+    <summary><strong>Programme de recommandation & barème de la prime</strong></summary>
+    <div class="legal-accordion-body">
+      <p><strong>Damien ROYEZ – Entrepreneur individuel (EI)</strong><br>
+      Conseiller immobilier · RSAC Montpellier 908 588 726 · SIRET 908 588 726 00012.</p>
+      <p>Cette application et le programme de recommandation sont exploités par Damien ROYEZ pour son propre compte. LGM Immobilier n’est pas l’éditeur ni l’exploitant de cette application.</p>
+      <h3>Barème de la prime</h3>
+      <div class="legal-scale">
+        <span>≤ 5 000 € → <b>100 €</b></span><span>5 001–10 000 € → <b>250 €</b></span>
+        <span>10 001–15 000 € → <b>500 €</b></span><span>15 001–20 000 € → <b>750 €</b></span>
+        <span>20 001–25 000 € → <b>1 000 €</b></span><span>25 001–30 000 € → <b>1 250 €</b></span>
+        <span>&gt; 30 000 € → <b>1 500 €</b></span>
+      </div>
+      <p class="muted">Le barème est calculé à partir de la rémunération effectivement versée par LGM Immobilier à Damien ROYEZ au titre de la transaction concernée. La prime est réglée par Damien ROYEZ par virement bancaire ou carte cadeau dans un délai maximum de 10 jours suivant ce versement, sous réserve des conditions du programme.</p>
+    </div>
   </details>
-  
+  <details class="legal-accordion">
+    <summary><strong>Confidentialité & données personnelles</strong></summary>
+    <div class="legal-accordion-body">
+      <p>Les coordonnées renseignées servent à gérer le compte apporteur, les recommandations, leur suivi et les rémunérations. Lorsqu’une recommandation concerne un tiers, l’apporteur confirme l’avoir informé de la transmission de ses coordonnées à Damien ROYEZ dans le cadre de son projet immobilier.</p>
+    </div>
+  </details>
 </section>
 
 </main>
