@@ -347,8 +347,14 @@ body.user-authenticated #auth{display:none!important}
  #adminMobileRows{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
  .mobile-ref-card{display:block!important}
 }
+</style><style id="v161-polish">
+#dashAvatar,#profileAvatarPreview{aspect-ratio:1/1!important;border-radius:50%!important;object-fit:cover!important;object-position:center!important;flex:0 0 auto!important}
+@media(max-width:760px){#dashAvatar{width:64px!important;height:64px!important;min-width:64px!important;min-height:64px!important}}
+.danger-btn{background:#fff!important;color:#b42318!important;border:1px solid #f0b7b3!important}
+.danger-btn:hover{background:#fff4f3!important}
+.logout-busy{opacity:.65;pointer-events:none}
 </style></head>
-<body data-app-version="16.0">
+<body data-app-version="16.1">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -596,7 +602,7 @@ body.user-authenticated #auth{display:none!important}
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="16.0" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="16.1" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -773,7 +779,15 @@ $('login').addEventListener('click', async (ev)=>{
    btn.disabled=false; btn.textContent=oldText;
  }
 });
-$('logout').onclick=async()=>{await supabase.auth.signOut(); document.body.classList.remove('user-authenticated'); location.reload()};
+$('logout').onclick=async()=>{
+ const btn=$('logout'); btn.classList.add('logout-busy'); btn.textContent='Déconnexion…';
+ document.body.classList.remove('user-authenticated');
+ $('app')?.classList.add('hidden'); $('sessionFooter')?.classList.add('hidden'); $('bottomNav')?.classList.add('hidden'); $('mobileQuickActions')?.classList.add('hidden');
+ $('publicHero')?.classList.remove('hidden'); $('auth')?.classList.remove('hidden');
+ window.scrollTo({top:0,behavior:'auto'});
+ try{if(referrerRealtimeChannel){await supabase.removeChannel(referrerRealtimeChannel);referrerRealtimeChannel=null;} await supabase.auth.signOut({scope:'local'});}
+ finally{currentProfile=null; location.replace(location.origin+'/?logout=1');}
+};
 $('refresh')?.addEventListener('click',loadReferrals);
 
 let currentProfile=null;
@@ -977,7 +991,7 @@ $('mobileRefresh')?.addEventListener('click',async()=>{
     }
   }catch(e){console.warn('REFRESH',e)}
   const u=new URL(location.href);
-  u.searchParams.set('appv','15.4');
+  u.searchParams.set('appv','16.1');
   location.replace(u.toString());
 });
 
@@ -1046,6 +1060,7 @@ function renderReferrers(rows){
      <div class="metric"><small>Mandats</small><b>${a.mandates}</b></div>
      <div class="metric"><small>Ventes</small><b>${a.sales}</b></div>
      <div class="metric"><small>Perçu</small><b>${a.paid.toLocaleString('fr-FR')} €</b><small>${a.due.toLocaleString('fr-FR')} € à payer</small></div>
+     <div><button type="button" class="danger-btn deleteReferrer" data-id="${a.id}" data-name="${esc((a.first_name||'')+' '+(a.last_name||''))}">Supprimer le profil</button></div>
    </div>`;
  }).join('')||'<p class="muted">Aucun apporteur enregistré.</p>';
 }
@@ -1055,6 +1070,21 @@ function filterReferrers(){
 }
 $('referrerSearch').oninput=filterReferrers;
 $('referrerSort').onchange=filterReferrers;
+$('referrerCards')?.addEventListener('click',async e=>{
+ const btn=e.target.closest('.deleteReferrer'); if(!btn) return;
+ const name=btn.dataset.name||'cet apporteur';
+ if(!confirm(`Supprimer définitivement le profil de ${name} ?\n\nSon compte de connexion et ses données associées seront supprimés. Cette action est irréversible.`)) return;
+ btn.disabled=true; btn.textContent='Suppression…';
+ try{
+   const {data:{session}}=await supabase.auth.getSession();
+   if(!session) throw new Error('Session administrateur expirée');
+   const res=await fetch(`${SUPABASE_URL}/functions/v1/delete-referrer`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({user_id:btn.dataset.id})});
+   const out=await res.json().catch(()=>({}));
+   if(!res.ok) throw new Error(out.error||'Suppression impossible');
+   await loadReferrers(); await loadAdmin();
+   message(`Profil de ${name} supprimé définitivement.`);
+ }catch(err){btn.disabled=false;btn.textContent='Supprimer le profil';message(err.message,true)}
+});
 
 
 let adminReferralCache=[], adminPeople={}, adminRemByRef={}, adminFilter='all';

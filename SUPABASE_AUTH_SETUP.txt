@@ -1,0 +1,21 @@
+V16.1 — Configuration Supabase Auth
+
+1) Authentication > URL Configuration
+Site URL:
+https://damien-recommandations.royezdamien.workers.dev
+
+Redirect URLs:
+https://damien-recommandations.royezdamien.workers.dev/**
+https://damien-recommandations.royezdamien.workers.dev/?confirmed=1
+
+2) Authentication > Email Templates > Confirm signup
+Subject:
+Bienvenue dans Damien Recommandations 👋
+
+Copier le contenu de SUPABASE_CONFIRM_EMAIL_TEMPLATE.html.
+
+Le bouton conserve {{ .ConfirmationURL }} : l'application envoie déjà emailRedirectTo vers le domaine de production.
+
+3) Pour supprimer l'apparence d'expéditeur Supabase :
+Authentication > Emails > SMTP Settings
+Configurer un SMTP personnalisé avec l'adresse d'envoi choisie.
