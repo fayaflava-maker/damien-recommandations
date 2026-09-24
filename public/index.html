@@ -354,7 +354,7 @@ body.user-authenticated #auth{display:none!important}
 .danger-btn:hover{background:#fff4f3!important}
 .logout-busy{opacity:.65;pointer-events:none}
 </style></head>
-<body data-app-version="16.1">
+<body data-app-version="16.1.1">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -602,7 +602,7 @@ body.user-authenticated #auth{display:none!important}
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="16.1" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="16.1.1" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -719,7 +719,9 @@ body.user-authenticated #auth{display:none!important}
 
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-const supabase = createClient('https://oyquwmnvrsmldloveuir.supabase.co', 'sb_publishable_3iikYtMXdY3aq0FTptQQuQ_5JAhlBS0');
+const SUPABASE_URL = 'https://oyquwmnvrsmldloveuir.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_3iikYtMXdY3aq0FTptQQuQ_5JAhlBS0';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const labels = {
  new:'Nouvelle recommandation', upcoming:'Projet à venir', confirmed:'Projet confirmé',
@@ -991,7 +993,7 @@ $('mobileRefresh')?.addEventListener('click',async()=>{
     }
   }catch(e){console.warn('REFRESH',e)}
   const u=new URL(location.href);
-  u.searchParams.set('appv','16.1');
+  u.searchParams.set('appv','16.1.1');
   location.replace(u.toString());
 });
 

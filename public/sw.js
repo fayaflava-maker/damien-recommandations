@@ -1,4 +1,4 @@
-const CACHE='damien-recommandations-v16-1';
+const CACHE='damien-recommandations-v16-1-1';
 const STATIC=['/manifest.webmanifest','/damien-royez.jpg'];
 
 self.addEventListener('install',event=>{
