@@ -338,8 +338,17 @@ body.user-authenticated #auth{display:none!important}
   #bottomNav button small{font-size:9.5px!important;font-weight:800!important;white-space:nowrap!important}
   #bottomNav button.active{color:#e72d71!important}
 }
+</style><style>
+.action-feedback{margin-top:9px;padding:10px 12px;border-radius:12px;font-size:14px}
+.action-feedback.success{background:#eef9f0;color:#176b32;border:1px solid #bfe4c8}
+.action-feedback.error{background:#fff0f1;color:#9d2430;border:1px solid #efc1c6}
+@media(min-width:761px){
+ #adminTableWrap{display:none!important}
+ #adminMobileRows{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
+ .mobile-ref-card{display:block!important}
+}
 </style></head>
-<body data-app-version="15.4">
+<body data-app-version="16.0">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -587,7 +596,7 @@ body.user-authenticated #auth{display:none!important}
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="15.4" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="16.0" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -719,6 +728,15 @@ const mainStatusOptions=[
 ];
 function message(t, err=false){ $('msg').textContent=t; $('msg').className='notice'+(err?' error':''); }
 function clearMessage(){ $('msg').className='notice hidden'; }
+function actionFeedback(button,text,err=false){
+ if(!button) return message(text,err);
+ let box=button.nextElementSibling;
+ if(!box || !box.classList.contains('action-feedback')){
+   box=document.createElement('div'); box.className='action-feedback'; button.insertAdjacentElement('afterend',box);
+ }
+ box.textContent=text; box.className='action-feedback'+(err?' error':' success');
+}
+
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 
@@ -730,11 +748,11 @@ $('signup').onclick=async()=>{
  if(!$('signupTerms').checked) return message('Vous devez accepter les conditions du programme, les CGU et la politique de confidentialité.',true);
  const {data,error}=await supabase.auth.signUp({
    email:$('email').value.trim(), password:$('password').value,
-   options:{emailRedirectTo:location.origin+'/?confirmed=1',data:{first_name:first,last_name:last,phone,address,postal_code:postal,city,
+   options:{emailRedirectTo:'https://damien-recommandations.royezdamien.workers.dev/?confirmed=1',data:{first_name:first,last_name:last,phone,address,postal_code:postal,city,
      terms_version:'v14-2026-09-23',terms_accepted:'true'}}
  });
- if(error) return message(error.message,true);
- message(data.session ? 'Compte créé et connecté.' : 'Compte créé. Vérifiez votre email pour confirmer votre inscription.');
+ if(error) return actionFeedback($('signup'),error.message,true);
+ actionFeedback($('signup'),data.session ? 'Compte créé et connecté.' : 'Compte créé. Vérifiez votre e-mail pour confirmer votre inscription.');
  if(data.session) await boot();
 };
 $('login').addEventListener('click', async (ev)=>{
@@ -775,6 +793,10 @@ function setupReferrerRealtime(user,profile){
     .subscribe();
 }
 async function boot(){
+ if(new URLSearchParams(location.search).get('confirmed')==='1'){
+   setTimeout(()=>message('Adresse e-mail confirmée ✓ Votre compte est maintenant actif.'),50);
+ }
+
  if(refCode) return;
  const {data:{session}}=await supabase.auth.getSession();
  if(!session) return;
@@ -853,7 +875,7 @@ $('trackingRecommend')?.addEventListener('click',()=>document.querySelector('.na
 $('referralForm').onsubmit=async e=>{
  e.preventDefault(); clearMessage();
  const {data:{user}}=await supabase.auth.getUser();
- if(!user) return message('Vous devez être connecté.',true);
+ if(!user) return actionFeedback(e.submitter||e.target.querySelector('button[type="submit"]'),'Vous devez être connecté.',true);
  const payload={
    referrer_id:user.id, lead_first_name:$('leadFirst').value.trim(), lead_last_name:$('leadLast').value.trim(),
    lead_phone:$('leadPhone').value.trim(), lead_email:$('leadEmail').value.trim()||null, commune:$('commune').value.trim(),
@@ -861,8 +883,9 @@ $('referralForm').onsubmit=async e=>{
    relationship:$('relationship').value.trim()||null, notes:$('notes').value.trim()||null, status:'new', consent_confirmed_at:new Date().toISOString(), consent_source:'account'
  };
  const {error}=await supabase.from('referrals').insert(payload);
- if(error) return message('Envoi impossible : '+error.message,true);
- e.target.reset(); message('Recommandation envoyée avec succès.'); await loadReferrals();
+ const submitBtn=e.submitter||e.target.querySelector('button[type="submit"]');
+ if(error) return actionFeedback(submitBtn,'Envoi impossible : '+error.message,true);
+ e.target.reset(); actionFeedback(submitBtn,'Recommandation envoyée avec succès.'); await loadReferrals();
 };
 
 document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',async()=>{
@@ -1054,13 +1077,15 @@ function renderAdminRows(){
  $('adminRows').innerHTML=table||'<tr><td colspan="7" class="muted">Aucune recommandation.</td></tr>';
  $('adminMobileRows').innerHTML=refs.map(r=>{
    const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
-   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
+   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><div class="controls" style="margin-top:8px"><select data-mpaystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>Paiement en cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Récompense validée</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Récompense payée</option></select><select data-mmethod="${r.id}"><option value="">Mode de paiement</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement bancaire</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
  }).join('')||'<p class="muted">Aucune recommandation.</p>';
- document.querySelectorAll('.adminSave').forEach(b=>b.onclick=()=>saveAdminReferral(b.dataset.id));
+ document.querySelectorAll('.adminSave').forEach(b=>b.onclick=()=>saveAdminReferral(b.dataset.id,b));
  document.querySelectorAll('.mobileSave').forEach(b=>b.onclick=async()=>{
    const id=b.dataset.id, st=document.querySelector(`[data-mstatus="${id}"]`), amt=document.querySelector(`[data-mamount="${id}"]`);
+   const pst=document.querySelector(`[data-mpaystatus="${id}"]`), method=document.querySelector(`[data-mmethod="${id}"]`);
    document.querySelector(`[data-status="${id}"]`).value=st.value; document.querySelector(`[data-amount="${id}"]`).value=amt.value;
-   await saveAdminReferral(id);
+   document.querySelector(`[data-paystatus="${id}"]`).value=pst.value; const dm=document.querySelector(`[data-method="${id}"]`); if(dm) dm.value=method.value;
+   await saveAdminReferral(id,b);
  });
 }
 
@@ -1080,13 +1105,13 @@ async function loadAdmin(){
   renderAdminRows();
   $('lastRefresh').textContent='Dernière mise à jour : '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 }
-async function saveAdminReferral(id){
+async function saveAdminReferral(id,sourceButton=null){
   const status=document.querySelector(`[data-status="${id}"]`).value;
   const lgmAmount=document.querySelector(`[data-amount="${id}"]`).value;
   const paystatus=document.querySelector(`[data-paystatus="${id}"]`).value;
   const method=document.querySelector(`[data-method="${id}"]`)?.value||null;
   const {error}=await supabase.from('referrals').update({status}).eq('id',id);
-  if(error) return message('Modification impossible : '+error.message,true);
+  if(error) return actionFeedback(sourceButton,'Modification impossible : '+error.message,true);
   if(lgmAmount!==''){
     const {data:existing}=await supabase.from('remunerations').select('id,lgm_paid_at').eq('referral_id',id).maybeSingle();
     const patch={lgm_received_amount:Number(lgmAmount),status:paystatus,payment_method:method,
@@ -1095,7 +1120,7 @@ async function saveAdminReferral(id){
     if(existing) await supabase.from('remunerations').update(patch).eq('id',existing.id);
     else await supabase.from('remunerations').insert({referral_id:id,...patch});
   }
-  message('Recommandation mise à jour. La prime apporteur est calculée automatiquement.');
+  actionFeedback(sourceButton,'Recommandation mise à jour. La prime apporteur est calculée automatiquement.');
   await loadAdmin(); await loadReferrals(); await loadEarnings();
 }
 
@@ -1217,12 +1242,19 @@ async function getExportData(){
  }));
  const recommandations=(refs||[]).map(r=>{const a=pmap[r.referrer_id]||{};return {
    'Prénom':r.lead_first_name||'','Nom':r.lead_last_name||'','Téléphone':r.lead_phone||'','E-mail':r.lead_email||'',
-   'Commune':r.commune||'','Projet':r.project_type||'','Type de bien':r.property_type||'','Lien':r.relationship||'',
-   'Statut':r.status||'','Apporteur':`${a.first_name||''} ${a.last_name||''}`.trim(),'Date':excelDate(r.created_at)
+   'Commune':r.commune||'','Projet':PROJECT_LABELS[r.project_type]||r.project_type||'','Type de bien':r.property_type||'','Lien':r.relationship||'',
+   'Statut':STATUS_LABELS[r.status]||r.status||'','Apporteur':`${a.first_name||''} ${a.last_name||''}`.trim(),'Date':excelDate(r.created_at)
  }});
  return {apporteurs,recommandations};
 }
-async function exportAdminContacts(){try{const d=await getExportData();saveXlsx({'Apporteurs':d.apporteurs,'Recommandations':d.recommandations},`contacts-damien-${new Date().toISOString().slice(0,10)}.xlsx`)}catch(e){message('Export impossible : '+e.message,true)}}
+async function exportAdminContacts(){try{
+ const d=await getExportData();
+ const all=[
+  ...d.apporteurs.map(x=>({'Type de contact':'Apporteur',...x})),
+  ...d.recommandations.map(x=>({'Type de contact':'Contact recommandé',...x}))
+ ];
+ saveXlsx({'Tous les contacts':all},`tous-les-contacts-damien-${new Date().toISOString().slice(0,10)}.xlsx`)
+}catch(e){message('Export impossible : '+e.message,true)}}
 async function exportAdminReferrers(){try{const d=await getExportData();saveXlsx({'Apporteurs':d.apporteurs},`apporteurs-damien-${new Date().toISOString().slice(0,10)}.xlsx`)}catch(e){message('Export impossible : '+e.message,true)}}
 async function exportAdminRecommendations(){try{const d=await getExportData();saveXlsx({'Recommandations':d.recommandations},`recommandations-damien-${new Date().toISOString().slice(0,10)}.xlsx`)}catch(e){message('Export impossible : '+e.message,true)}}
 async function exportAdminRemunerations(){
@@ -1233,7 +1265,7 @@ async function exportAdminRemunerations(){
   const rows=(data||[]).map(x=>{const p=pmap[x.referrals?.referrer_id]||{};return {
    'Contact recommandé':`${x.referrals?.lead_first_name||''} ${x.referrals?.lead_last_name||''}`.trim(),'Apporteur':`${p.first_name||''} ${p.last_name||''}`.trim(),
    'Rémunération LGM reçue (€)':Number(x.lgm_received_amount||0),'Prime apporteur (€)':Number(x.amount||0),
-   'Mode':x.payment_method==='bank_transfer'?'Virement':x.payment_method==='gift_card'?'Carte cadeau':'','Statut':x.status||'',
+   'Mode':x.payment_method==='bank_transfer'?'Virement':x.payment_method==='gift_card'?'Carte cadeau':'','Statut':({pending:'Paiement en cours',validated:'Récompense validée',paid:'Récompense payée'})[x.status]||STATUS_LABELS[x.status]||x.status||'',
    'Date versement LGM':excelDate(x.lgm_paid_at),'Échéance J+10':excelDate(x.due_at),'Création':excelDate(x.created_at)
   }});
   saveXlsx({'Rémunérations':rows},`remunerations-damien-${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -1267,11 +1299,11 @@ async function setupOnboarding(profile,user){
  $('saveProfile').onclick=async()=>{
    const phone=$('profilePhone').value.trim(), address=$('profileAddress').value.trim();
    const postal_code=$('profilePostalCode').value.trim(), city=$('profileCity').value.trim();
-   if(!phone||!address||!postal_code||!city) return message('Merci de compléter téléphone, adresse, code postal et ville.',true);
+   if(!phone||!address||!postal_code||!city) return actionFeedback($('saveProfile'),'Merci de compléter téléphone, adresse, code postal et ville.',true);
    const {error}=await supabase.from('profiles').update({phone,address,postal_code,city}).eq('id',user.id);
-   if(error) return message('Impossible de mettre à jour le profil.',true);
+   if(error) return actionFeedback($('saveProfile'),'Impossible de mettre à jour le profil.',true);
    $('onboardBar').style.width='100%'; $('onboardHint').textContent='Profil prêt ✓ Votre lien et votre QR code sont disponibles juste en dessous.';
-   message('Profil enregistré.');
+   actionFeedback($('saveProfile'),'Profil enregistré.');
    const {data:p}=await supabase.from('profiles').select('*').eq('id',user.id).single();
    if(p) $('profileInfo').innerHTML=`<strong>${esc(p.first_name)} ${esc(p.last_name)}</strong><br>${esc(p.email||user.email||'')}<br>${esc(p.phone||'')}<br>${esc(p.address||'')}<br>${esc(p.postal_code||'')} ${esc(p.city||'')}`;
  };
@@ -1309,6 +1341,20 @@ async function adminNotificationPulse(profile){
  },60000);
 }
 
+
+function notificationTarget(n){
+ const t=((n.title||'')+' '+(n.body||'')).toLowerCase();
+ if(currentProfile?.role==='admin'){
+   if(t.includes('apporteur')||t.includes('inscrit')) return 'referrersPanel';
+   if(t.includes('recommand')||t.includes('contact')) return 'contactsPanel';
+   if(t.includes('rémun')||t.includes('prime')||t.includes('paiement')) return 'adminPanel';
+   return 'adminPanel';
+ }
+ if(t.includes('rémun')||t.includes('prime')||t.includes('paiement')||t.includes('vendu')) return 'earnings';
+ if(t.includes('recommand')||t.includes('projet')||t.includes('mandat')||t.includes('contact')) return 'tracking';
+ return 'referrerDashboard';
+}
+
 async function loadNotifications(){
   const {data:{user}}=await supabase.auth.getUser();
   if(!user) return;
@@ -1319,7 +1365,7 @@ async function loadNotifications(){
   if(error){list.innerHTML='<p class="error">'+esc(error.message)+'</p>';return;}
 
   list.innerHTML=(data||[]).length?(data||[]).map(n=>`
-    <article class="item notification-card" data-notification-id="${n.id}"
+    <article class="item notification-card" data-notification-id="${n.id}" data-target="${notificationTarget(n)}"
       style="${n.read_at
         ? 'opacity:.62;background:#f5f5f5;border-left:4px solid #b7b7b7;'
         : 'opacity:1;background:#fff;border-left:4px solid #d81b60;box-shadow:0 4px 14px rgba(0,0,0,.06);'}">
@@ -1335,6 +1381,14 @@ async function loadNotifications(){
       </div>
     </article>`).join(''):'<p class="muted">Aucune notification.</p>';
 
+  list.querySelectorAll('.notification-card').forEach(card=>{
+    card.style.cursor='pointer';
+    card.addEventListener('click',async ev=>{
+      if(ev.target.closest('button')) return;
+      await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',card.dataset.notificationId).eq('user_id',user.id);
+      await openMobileSection(card.dataset.target);
+    });
+  });
   list.querySelectorAll('.notif-read-btn').forEach(btn=>{
     btn.addEventListener('click', async ev=>{
       ev.preventDefault(); ev.stopPropagation();
