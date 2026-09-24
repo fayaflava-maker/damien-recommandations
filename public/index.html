@@ -260,15 +260,86 @@ body.user-authenticated #auth{display:none!important}
   #bottomNav button span{font-size:22px!important;line-height:1!important}
   #bottomNav button small{font-size:10px!important;font-weight:800!important;white-space:nowrap!important}
   #bottomNav button.active{color:#e72d71!important}
-  .mobile-quick:not(.hidden){display:flex!important;position:fixed;z-index:1001;right:14px;top:calc(12px + env(safe-area-inset-top));gap:8px}
-  .mobile-quick>button{position:relative;width:44px;height:44px;border-radius:50%;border:1px solid #e5e7eb;background:#fff;
-    box-shadow:0 5px 18px rgba(17,27,61,.14);font-size:20px;display:grid;place-items:center}
-  #mobileNotifBadge{position:absolute;right:-4px;top:-5px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;
-    background:#e72d71;color:#fff;border:2px solid #fff;font-size:11px;font-weight:900;display:grid;place-items:center}
-  #mobileNotifBadge.hidden{display:none!important}
+}
+</style><style id="v154-mobile-final">
+@media(max-width:760px){
+  body{padding-bottom:94px!important}
+  #mainNav .wrap{display:none!important}
+
+  #mobileQuickActions.mobile-quick:not(.hidden){
+    display:flex!important;
+    position:fixed!important;
+    z-index:5000!important;
+    top:calc(17px + env(safe-area-inset-top))!important;
+    right:15px!important;
+    gap:12px!important;
+    align-items:center!important;
+  }
+  #mobileQuickActions.mobile-quick>button{
+    appearance:none!important;
+    -webkit-appearance:none!important;
+    position:relative!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    width:34px!important;
+    height:34px!important;
+    min-width:34px!important;
+    min-height:34px!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    outline:0!important;
+    border-radius:0!important;
+    background:none!important;
+    background-color:transparent!important;
+    box-shadow:none!important;
+    color:#fff!important;
+    font-size:25px!important;
+    line-height:1!important;
+  }
+  #mobileQuickActions #mobileRefresh{
+    font-family:Arial,sans-serif!important;
+    font-size:31px!important;
+    font-weight:400!important;
+  }
+  #mobileQuickActions #mobileNotifications span{font-size:24px!important;line-height:1!important}
+  #mobileQuickActions #mobileNotifBadge{
+    position:absolute!important;
+    top:-7px!important;right:-8px!important;
+    min-width:18px!important;height:18px!important;
+    padding:0 4px!important;
+    border-radius:999px!important;
+    border:2px solid #0d213d!important;
+    background:#e72d71!important;color:#fff!important;
+    font-size:10px!important;font-weight:900!important;
+    display:grid!important;place-items:center!important;
+  }
+  #mobileQuickActions #mobileNotifBadge.hidden{display:none!important}
+
+  #bottomNav:not(.hidden){
+    position:fixed!important;z-index:4000!important;
+    left:10px!important;right:10px!important;
+    bottom:calc(10px + env(safe-area-inset-bottom))!important;
+    display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:0!important;padding:6px!important;
+    border:1px solid #e4e7ee!important;border-radius:20px!important;
+    background:rgba(255,255,255,.98)!important;
+    box-shadow:0 8px 30px rgba(17,27,61,.18)!important;
+  }
+  #bottomNav button{
+    appearance:none!important;-webkit-appearance:none!important;
+    min-width:0!important;border:0!important;background:transparent!important;
+    color:#697386!important;display:flex!important;flex-direction:column!important;
+    align-items:center!important;justify-content:center!important;gap:2px!important;
+    padding:5px 1px!important;font:inherit!important;
+  }
+  #bottomNav button span{font-size:21px!important;line-height:1!important}
+  #bottomNav button small{font-size:9.5px!important;font-weight:800!important;white-space:nowrap!important}
+  #bottomNav button.active{color:#e72d71!important}
 }
 </style></head>
-<body>
+<body data-app-version="15.4">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -516,7 +587,7 @@ body.user-authenticated #auth{display:none!important}
       </div>
     </section>
 
-    <section id="adminPanel" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="15.4" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -718,6 +789,16 @@ async function boot(){
  await setupOnboarding(profile,user); await setupShareLink(profile,user); await adminNotificationPulse(profile);
  await setupV14Profile(profile,user);
  setupReferrerRealtime(user,profile);
+ if(profile?.role!=='admin'){
+   $('bottomNav').innerHTML=`
+     <button class="active" data-go="referrerDashboard"><span>⌂</span><small>Accueil</small></button>
+     <button data-go="recommend"><span>＋</span><small>Recommander</small></button>
+     <button data-go="tracking"><span>◉</span><small>Suivi</small></button>
+     <button data-go="earnings"><span>€</span><small>Primes</small></button>
+     <button data-go="profile"><span>●</span><small>Profil</small></button>`;
+   $('bottomNav').classList.remove('hidden');
+   $('mobileQuickActions')?.classList.remove('hidden');
+ }
  if(profile?.role==='admin'){
    $('adminNav').classList.remove('hidden'); $('contactsNav').classList.remove('hidden'); $('referrersNav').classList.remove('hidden'); $('exportsNav').classList.remove('hidden'); $('archivesNav').classList.remove('hidden');
    // Admin has a dedicated workspace: hide apporteur-facing views.
@@ -725,7 +806,15 @@ async function boot(){
    document.querySelectorAll('.navbtn').forEach(b=>{
      if(!['adminPanel','contactsPanel','referrersPanel','exportsPanel','archivesPanel','notificationsPanel'].includes(b.dataset.target)) b.classList.add('hidden');
    });
-   $('referrerDashboard').classList.add('hidden'); $('bottomNav').classList.add('hidden'); $('mobileQuickActions')?.classList.add('hidden');
+   $('referrerDashboard').classList.add('hidden');
+   $('bottomNav').innerHTML=`
+     <button class="active" data-go="adminPanel"><span>⌂</span><small>Accueil</small></button>
+     <button data-go="contactsPanel"><span>◎</span><small>Contacts</small></button>
+     <button data-go="referrersPanel"><span>♙</span><small>Apporteurs</small></button>
+     <button data-go="archivesPanel"><span>▣</span><small>Archives</small></button>
+     <button data-go="exportsPanel"><span>⇩</span><small>Exports</small></button>`;
+   $('bottomNav').classList.remove('hidden');
+   $('mobileQuickActions')?.classList.remove('hidden');
    $('adminPanel').classList.remove('hidden');
    await loadAdmin(); await loadReferrers();
  }
@@ -809,33 +898,64 @@ document.querySelectorAll('.navbtn').forEach(btn=>btn.addEventListener('click',a
 }));
 
 
-async function openReferrerSection(target){
-  if(!currentProfile || currentProfile.role==='admin') return;
-  const sections=['referrerDashboard','recommend','tracking','earnings','profile','notificationsPanel'];
-  if(!sections.includes(target)) return;
-  sections.forEach(id=>$(id)?.classList.add('hidden'));
-  $(target)?.classList.remove('hidden');
+async function openMobileSection(target){
+  if(!currentProfile) return;
+
+  if(currentProfile.role==='admin'){
+    const sections=['adminPanel','contactsPanel','referrersPanel','archivesPanel','exportsPanel','notificationsPanel'];
+    if(!sections.includes(target)) return;
+    sections.forEach(id=>$(id)?.classList.add('hidden'));
+    $(target)?.classList.remove('hidden');
+    if(target==='adminPanel') await loadAdmin();
+    if(target==='contactsPanel') await loadContacts();
+    if(target==='referrersPanel') await loadReferrers();
+    if(target==='archivesPanel') await loadArchives();
+    if(target==='notificationsPanel') await loadNotifications();
+  } else {
+    const sections=['referrerDashboard','recommend','tracking','earnings','profile','notificationsPanel'];
+    if(!sections.includes(target)) return;
+    sections.forEach(id=>$(id)?.classList.add('hidden'));
+    $(target)?.classList.remove('hidden');
+    if(target==='referrerDashboard') await refreshReferrerDashboard(currentProfile);
+    if(target==='tracking') await loadReferrals();
+    if(target==='earnings') await loadEarnings();
+    if(target==='notificationsPanel') await loadNotifications();
+  }
+
   document.querySelectorAll('#bottomNav button').forEach(b=>b.classList.toggle('active',b.dataset.go===target));
-  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('primary',b.dataset.target===target));
-  if(target==='referrerDashboard') await refreshReferrerDashboard(currentProfile);
-  if(target==='tracking') await loadReferrals();
-  if(target==='earnings') await loadEarnings();
-  if(target==='notificationsPanel') await loadNotifications();
+  document.querySelectorAll('.navbtn').forEach(b=>{
+    b.classList.toggle('primary',b.dataset.target===target);
+    b.classList.toggle('active',b.dataset.target===target);
+  });
   window.scrollTo({top:0,behavior:'smooth'});
 }
-document.querySelectorAll('#bottomNav button').forEach(b=>b.addEventListener('click',()=>openReferrerSection(b.dataset.go)));
-$('mobileNotifications')?.addEventListener('click',()=>openReferrerSection('notificationsPanel'));
+
+$('bottomNav')?.addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-go]');
+  if(btn) openMobileSection(btn.dataset.go);
+});
+$('mobileNotifications')?.addEventListener('click',()=>openMobileSection('notificationsPanel'));
 $('mobileRefresh')?.addEventListener('click',async()=>{
   const btn=$('mobileRefresh');
   if(btn){btn.disabled=true;btn.textContent='…';}
   try{
-    await refreshReferrerInterface();
+    if(currentProfile?.role==='admin'){
+      await Promise.all([loadAdmin(),loadReferrers(),loadNotifications()]);
+    }else{
+      await refreshReferrerInterface();
+    }
     if('serviceWorker' in navigator){
-      const reg=await navigator.serviceWorker.getRegistration();
-      if(reg) await reg.update();
+      const regs=await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(reg=>reg.unregister()));
+    }
+    if('caches' in window){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(k=>k.startsWith('damien-recommandations')).map(k=>caches.delete(k)));
     }
   }catch(e){console.warn('REFRESH',e)}
-  location.reload();
+  const u=new URL(location.href);
+  u.searchParams.set('appv','15.4');
+  location.replace(u.toString());
 });
 
 $('heroRecommend').onclick=async()=>{
