@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="/manifest.webmanifest?v=16.5">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=16.5">
-  <link rel="icon" type="image/png" href="/favicon.png?v=16.5">
+  <link rel="manifest" href="/manifest.webmanifest?v=17.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=17.0">
+  <link rel="icon" type="image/png" href="/favicon.png?v=17.0">
   <meta name="apple-mobile-web-app-title" content="Damien Reco">
   <title>Damien Recommandations</title>
   <style>
@@ -356,7 +356,19 @@ body.user-authenticated #auth{display:none!important}
 .danger-btn{background:#fff!important;color:#b42318!important;border:1px solid #f0b7b3!important}
 .danger-btn:hover{background:#fff4f3!important}
 .logout-busy{opacity:.65;pointer-events:none}
-</style></head>
+</style>
+<style id="v17-visual-refresh">
+:root{--v17-navy:#12355b;--v17-pink:#e83e83;--v17-yellow:#f4cf28;--v17-green:#7bb82d;--v17-cyan:#42aec4;--v17-bg:#f7f9f7;--v17-muted:#748096}
+body{background:linear-gradient(180deg,#fff 0%,#f7faf8 48%,#f5f8fb 100%)!important;color:#172033}
+.card,.panel,.mobile-ref-card,.stat-card{border-radius:22px!important;border:1px solid rgba(18,53,91,.09)!important;box-shadow:0 12px 30px rgba(18,53,91,.07)!important}
+button,.primary,input,select,textarea{border-radius:14px!important}
+.primary{background:var(--v17-navy)!important}
+#bottomNav{box-shadow:0 -10px 30px rgba(18,53,91,.10)!important}
+#bottomNav button.active,#bottomNav .active{color:var(--v17-pink)!important}
+.status{background:#e8f6fa!important;color:#17677a!important}
+.reward-card,.earnings-highlight{background:linear-gradient(135deg,#fff8d7,#fff)!important;border-color:#efd465!important}
+</style>
+</head>
 <body data-app-version="16.5">
 <header>
   <div class="wrap" style="padding:0">
@@ -727,15 +739,16 @@ const SUPABASE_KEY = 'sb_publishable_3iikYtMXdY3aq0FTptQQuQ_5JAhlBS0';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const labels = {
- new:'Nouvelle recommandation', upcoming:'Projet à venir', confirmed:'Projet confirmé',
+ new:'Nouvelle recommandation', upcoming:'Projet en attente', confirmed:'Contact établi',
  mandate:'Mandat signé', sold:'Bien vendu', validated:'Récompense validée',
- pending:'Paiement en cours', paid:'Récompense payée', without_follow_up:'Projet sans suite',
- to_contact:'Projet à venir', contacted:'Projet à venir', appointment:'Projet à venir', closed:'Projet sans suite'
+ pending:'Récompense en cours', paid:'Récompense payée', without_follow_up:'Sans suite',
+ to_contact:'Contact établi', contacted:'Contact établi', appointment:'RDV / Estimation', closed:'Sans suite',
+ contact_established:'Contact établi', appointment_estimate:'RDV / Estimation', under_offer:'Sous offre', under_compromise:'Sous compromis', on_hold:'Projet en attente'
 };
 const mainStatusOptions=[
- ['new','Nouvelle recommandation'],['upcoming','Projet à venir'],['confirmed','Projet confirmé'],
- ['mandate','Mandat signé'],['sold','Bien vendu'],['validated','Récompense validée'],
- ['paid','Récompense payée'],['without_follow_up','Projet sans suite']
+ ['new','Nouvelle recommandation'],['contact_established','Contact établi'],['appointment_estimate','RDV / Estimation'],
+ ['mandate','Mandat signé'],['under_offer','Sous offre'],['under_compromise','Sous compromis'],['sold','Bien vendu'],
+ ['on_hold','Projet en attente'],['without_follow_up','Sans suite']
 ];
 function message(t, err=false){ $('msg').textContent=t; $('msg').className='notice'+(err?' error':''); }
 function clearMessage(){ $('msg').className='notice hidden'; }
@@ -1171,7 +1184,7 @@ function renderAdminRows(){
  $('adminRows').innerHTML=table||'<tr><td colspan="7" class="muted">Aucune recommandation.</td></tr>';
  $('adminMobileRows').innerHTML=refs.map(r=>{
    const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
-   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div style="display:grid;gap:6px;margin:10px 0;padding:10px;background:#f7f7f8;border-radius:10px">${r.lead_phone?`<div>📞 <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a> · <a href="sms:${esc(r.lead_phone)}">SMS</a></div>`:''}${r.lead_email?`<div>✉️ <a href="mailto:${esc(r.lead_email)}">${esc(r.lead_email)}</a></div>`:''}<div>🏠 ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'Projet non renseigné')} · ${esc(r.property_type||'Type non renseigné')}</div>${r.relationship?`<div>🤝 ${esc(r.relationship)}</div>`:''}${r.notes?`<div>💬 ${esc(r.notes)}</div>`:''}<div>👤 Apporteur : ${esc(ap.first_name||'')} ${esc(ap.last_name||'')}${ap.phone?` · <a href="tel:${esc(ap.phone)}">${esc(ap.phone)}</a>`:''}</div><div class="muted">Reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><div class="controls" style="margin-top:8px"><select data-mpaystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>Paiement en cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Récompense validée</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Récompense payée</option></select><select data-mmethod="${r.id}"><option value="">Mode de paiement</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement bancaire</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
+   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div style="display:grid;gap:6px;margin:10px 0;padding:10px;background:#f7f7f8;border-radius:10px">${r.lead_phone?`<div>📞 <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a> · <a href="sms:${esc(r.lead_phone)}">SMS</a></div>`:''}${r.lead_email?`<div>✉️ <a href="mailto:${esc(r.lead_email)}">${esc(r.lead_email)}</a></div>`:''}<div>🏠 ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'Projet non renseigné')} · ${esc(r.property_type||'Type non renseigné')}</div>${r.relationship?`<div>🤝 ${esc(r.relationship)}</div>`:''}${r.notes?`<div>💬 ${esc(r.notes)}</div>`:''}<div>👤 Apporteur : ${esc(ap.first_name||'')} ${esc(ap.last_name||'')}${ap.phone?` · <a href="tel:${esc(ap.phone)}">${esc(ap.phone)}</a>`:''}</div><div class="muted">Reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><div class="controls" style="margin-top:8px"><select data-mpaystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>Récompense en cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Récompense validée</option><option value="available" ${rem?.status==='available'?'selected':''}>Récompense disponible</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Récompense payée</option></select><select data-mmethod="${r.id}"><option value="">Mode de paiement</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement bancaire</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
  }).join('')||'<p class="muted">Aucune recommandation.</p>';
  document.querySelectorAll('.adminSave').forEach(b=>b.onclick=()=>saveAdminReferral(b.dataset.id,b));
  document.querySelectorAll('.mobileSave').forEach(b=>b.onclick=async()=>{

@@ -1,4 +1,4 @@
-## V16.5
+## V17.0
 - Nouvelle icône Damien Recommandations pour iOS et Android/PWA.
 - Nom court écran d’accueil : Damien Reco.
 - Icônes 180, 192 et 512 px + maskable Android.
