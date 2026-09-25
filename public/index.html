@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="/manifest.webmanifest?v=16.4">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=16.4">
-  <link rel="icon" type="image/png" href="/favicon.png?v=16.4">
+  <link rel="manifest" href="/manifest.webmanifest?v=16.5">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=16.5">
+  <link rel="icon" type="image/png" href="/favicon.png?v=16.5">
   <meta name="apple-mobile-web-app-title" content="Damien Reco">
   <title>Damien Recommandations</title>
   <style>
@@ -357,7 +357,7 @@ body.user-authenticated #auth{display:none!important}
 .danger-btn:hover{background:#fff4f3!important}
 .logout-busy{opacity:.65;pointer-events:none}
 </style></head>
-<body data-app-version="16.4">
+<body data-app-version="16.5">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -437,7 +437,7 @@ body.user-authenticated #auth{display:none!important}
         <label>Téléphone *<input id="signupPhone" type="tel" autocomplete="tel" required placeholder="06…"></label>
         <label>Adresse *<input id="signupAddress" autocomplete="street-address" required placeholder="Numéro et rue"></label>
         <label>Code postal *<input id="signupPostalCode" inputmode="numeric" autocomplete="postal-code" required placeholder="Code postal"></label>
-        <label>Ville *<input id="signupCity" list="signupCityList" autocomplete="address-level2" required placeholder="Ville"><datalist id="signupCityList"></datalist><small id="signupCityHint" class="muted"></small></label>
+        <label>Ville *<select id="signupCity" autocomplete="address-level2" required disabled><option value="">Saisissez d’abord le code postal</option></select><small id="signupCityHint" class="muted"></small></label>
       </div>
       <label class="check" style="margin-top:14px"><input id="signupTerms" type="checkbox" required><span>J’accepte les conditions du programme de recommandation, les CGU et la politique de confidentialité (</span></label>
       <button class="primary" id="signup" style="margin-top:14px">Créer le compte</button>
@@ -524,7 +524,7 @@ body.user-authenticated #auth{display:none!important}
           <label>Téléphone *<input id="profilePhone" type="tel" autocomplete="tel" placeholder="06…"></label>
           <label>Adresse *<input id="profileAddress" autocomplete="street-address" placeholder="Numéro et rue"></label>
           <label>Code postal *<input id="profilePostalCode" inputmode="numeric" autocomplete="postal-code" placeholder="Code postal"></label>
-          <label>Ville *<input id="profileCity" list="profileCityList" autocomplete="address-level2" placeholder="Ville"><datalist id="profileCityList"></datalist><small id="profileCityHint" class="muted"></small></label>
+          <label>Ville *<select id="profileCity" autocomplete="address-level2" disabled><option value="">Saisissez d’abord le code postal</option></select><small id="profileCityHint" class="muted"></small></label>
         </div>
         <button id="saveProfile" class="primary">Enregistrer mon profil</button>
         <div id="onboardHint" class="muted" style="margin-top:10px"></div>
@@ -605,7 +605,7 @@ body.user-authenticated #auth{display:none!important}
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="16.4" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="16.5" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -751,10 +751,7 @@ function actionFeedback(button,text,err=false){
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 
-$('signup').onclick=async()=>{
- clearMessage();
- const first=$('firstName').value.trim(), last=$('lastName').value.trim(), phone=$('signupPhone').value.trim();
-// V16.4 — Communes automatiques à partir du code postal (API officielle geo.api.gouv.fr)
+// V16.5 — Sélection des communes par code postal, identique PC / mobile
 const cityLookupCache = new Map();
 async function citiesForPostalCode(postal){
   const code=(postal||'').replace(/\D/g,'').slice(0,5);
@@ -767,38 +764,55 @@ async function citiesForPostalCode(postal){
   cityLookupCache.set(code,names);
   return names;
 }
-function bindPostalCity(postalId,cityId,listId,hintId){
-  const postal=$(postalId), city=$(cityId), list=$(listId), hint=$(hintId);
-  if(!postal||!city||!list) return;
+function bindPostalCity(postalId,cityId,hintId){
+  const postal=$(postalId), city=$(cityId), hint=$(hintId);
+  if(!postal||!city) return;
   let seq=0;
   const refresh=async()=>{
     const current=++seq;
     const code=(postal.value||'').replace(/\D/g,'').slice(0,5);
     if(postal.value!==code) postal.value=code;
-    list.innerHTML='';
-    if(hint) hint.textContent=code.length===5?'Recherche des communes…':'';
+    city.disabled=true;
+    city.innerHTML='<option value="">Saisissez d’abord le code postal</option>';
+    if(hint) hint.textContent='';
     if(code.length!==5) return;
+    city.innerHTML='<option value="">Recherche des communes…</option>';
+    if(hint) hint.textContent='Recherche des communes…';
     try{
       const names=await citiesForPostalCode(code);
       if(current!==seq) return;
-      list.innerHTML=names.map(n=>`<option value="${esc(n)}"></option>`).join('');
-      if(names.length===1) city.value=names[0];
-      else if(city.value && !names.some(n=>n.toLocaleLowerCase('fr')===city.value.toLocaleLowerCase('fr'))) city.value='';
-      if(hint) hint.textContent=names.length>1?`${names.length} communes disponibles — touchez le champ Ville pour choisir`:names.length===1?'Commune sélectionnée automatiquement':'Aucune commune trouvée — saisie manuelle possible';
-      if(names.length>1){ city.focus({preventScroll:true}); city.blur(); }
+      if(!names.length){
+        city.innerHTML='<option value="">Aucune commune trouvée</option>';
+        if(hint) hint.textContent='Aucune commune trouvée pour ce code postal.';
+        return;
+      }
+      city.innerHTML='<option value="">Sélectionnez votre ville</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      city.disabled=false;
+      if(names.length===1){
+        city.value=names[0];
+        if(hint) hint.textContent='Commune sélectionnée automatiquement.';
+      }else{
+        city.value='';
+        if(hint) hint.textContent=`${names.length} communes disponibles — sélectionnez votre ville.`;
+      }
     }catch(e){
       if(current!==seq) return;
-      if(hint) hint.textContent='Recherche indisponible — vous pouvez saisir la ville manuellement';
+      city.innerHTML='<option value="">Service momentanément indisponible</option>';
+      if(hint) hint.textContent='Impossible de charger les communes pour le moment.';
     }
   };
   postal.addEventListener('input',refresh);
   postal.addEventListener('change',refresh);
   postal.addEventListener('blur',refresh);
-  if((postal.value||'').length===5) refresh();
+  postal._refreshCities=refresh;
+  if((postal.value||'').replace(/\D/g,'').length===5) refresh();
 }
-bindPostalCity('signupPostalCode','signupCity','signupCityList','signupCityHint');
-bindPostalCity('profilePostalCode','profileCity','profileCityList','profileCityHint');
+bindPostalCity('signupPostalCode','signupCity','signupCityHint');
+bindPostalCity('profilePostalCode','profileCity','profileCityHint');
 
+$('signup').onclick=async()=>{
+ clearMessage();
+ const first=$('firstName').value.trim(), last=$('lastName').value.trim(), phone=$('signupPhone').value.trim();
  const address=$('signupAddress').value.trim(), postal=$('signupPostalCode').value.trim(), city=$('signupCity').value.trim();
  if(!first||!last||!phone||!address||!postal||!city) return message('Merci de compléter toutes vos coordonnées.',true);
  if(!$('signupTerms').checked) return message('Vous devez accepter les conditions du programme, les CGU et la politique de confidentialité.',true);
@@ -1041,7 +1055,7 @@ $('mobileRefresh')?.addEventListener('click',async()=>{
     }
   }catch(e){console.warn('REFRESH',e)}
   const u=new URL(location.href);
-  u.searchParams.set('appv','16.4');
+  u.searchParams.set('appv','16.5');
   location.replace(u.toString());
 });
 
@@ -1381,7 +1395,12 @@ async function setupOnboarding(profile,user){
  $('profilePhone').value=profile?.phone||'';
  $('profileAddress').value=profile?.address||'';
  $('profilePostalCode').value=profile?.postal_code||'';
- $('profileCity').value=profile?.city||'';
+ const savedProfileCity=profile?.city||'';
+ $('profileCity').dataset.savedCity=savedProfileCity;
+ if($('profilePostalCode')._refreshCities){
+   await $('profilePostalCode')._refreshCities();
+   if(savedProfileCity && [...$('profileCity').options].some(o=>o.value===savedProfileCity)) $('profileCity').value=savedProfileCity;
+ }
  const complete=!!(profile?.phone&&profile?.address&&profile?.postal_code&&profile?.city&&profile?.referral_code);
  $('onboardBar').style.width=complete?'100%':'60%';
  $('onboardHint').textContent=complete?'Profil prêt ✓ Votre lien et votre QR code sont disponibles juste en dessous.':'Complétez vos coordonnées obligatoires pour finaliser votre profil.';
