@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="/manifest.webmanifest?v=16.4">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=16.4">
+  <link rel="icon" type="image/png" href="/favicon.png?v=16.4">
+  <meta name="apple-mobile-web-app-title" content="Damien Reco">
   <title>Damien Recommandations</title>
   <style>
     *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f5f6f8;color:#111827}
@@ -354,7 +357,7 @@ body.user-authenticated #auth{display:none!important}
 .danger-btn:hover{background:#fff4f3!important}
 .logout-busy{opacity:.65;pointer-events:none}
 </style></head>
-<body data-app-version="16.1.1">
+<body data-app-version="16.4">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -434,7 +437,7 @@ body.user-authenticated #auth{display:none!important}
         <label>Téléphone *<input id="signupPhone" type="tel" autocomplete="tel" required placeholder="06…"></label>
         <label>Adresse *<input id="signupAddress" autocomplete="street-address" required placeholder="Numéro et rue"></label>
         <label>Code postal *<input id="signupPostalCode" inputmode="numeric" autocomplete="postal-code" required placeholder="Code postal"></label>
-        <label>Ville *<input id="signupCity" autocomplete="address-level2" required placeholder="Ville"></label>
+        <label>Ville *<input id="signupCity" list="signupCityList" autocomplete="address-level2" required placeholder="Ville"><datalist id="signupCityList"></datalist><small id="signupCityHint" class="muted"></small></label>
       </div>
       <label class="check" style="margin-top:14px"><input id="signupTerms" type="checkbox" required><span>J’accepte les conditions du programme de recommandation, les CGU et la politique de confidentialité (</span></label>
       <button class="primary" id="signup" style="margin-top:14px">Créer le compte</button>
@@ -521,7 +524,7 @@ body.user-authenticated #auth{display:none!important}
           <label>Téléphone *<input id="profilePhone" type="tel" autocomplete="tel" placeholder="06…"></label>
           <label>Adresse *<input id="profileAddress" autocomplete="street-address" placeholder="Numéro et rue"></label>
           <label>Code postal *<input id="profilePostalCode" inputmode="numeric" autocomplete="postal-code" placeholder="Code postal"></label>
-          <label>Ville *<input id="profileCity" autocomplete="address-level2" placeholder="Ville"></label>
+          <label>Ville *<input id="profileCity" list="profileCityList" autocomplete="address-level2" placeholder="Ville"><datalist id="profileCityList"></datalist><small id="profileCityHint" class="muted"></small></label>
         </div>
         <button id="saveProfile" class="primary">Enregistrer mon profil</button>
         <div id="onboardHint" class="muted" style="margin-top:10px"></div>
@@ -602,7 +605,7 @@ body.user-authenticated #auth{display:none!important}
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="16.1.1" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="16.4" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -751,6 +754,51 @@ $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 $('signup').onclick=async()=>{
  clearMessage();
  const first=$('firstName').value.trim(), last=$('lastName').value.trim(), phone=$('signupPhone').value.trim();
+// V16.4 — Communes automatiques à partir du code postal (API officielle geo.api.gouv.fr)
+const cityLookupCache = new Map();
+async function citiesForPostalCode(postal){
+  const code=(postal||'').replace(/\D/g,'').slice(0,5);
+  if(code.length!==5) return [];
+  if(cityLookupCache.has(code)) return cityLookupCache.get(code);
+  const res=await fetch(`https://geo.api.gouv.fr/communes?codePostal=${encodeURIComponent(code)}&fields=nom,code,codesPostaux`);
+  if(!res.ok) throw new Error('Service communes indisponible');
+  const rows=await res.json();
+  const names=[...new Set((rows||[]).map(x=>x.nom).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+  cityLookupCache.set(code,names);
+  return names;
+}
+function bindPostalCity(postalId,cityId,listId,hintId){
+  const postal=$(postalId), city=$(cityId), list=$(listId), hint=$(hintId);
+  if(!postal||!city||!list) return;
+  let seq=0;
+  const refresh=async()=>{
+    const current=++seq;
+    const code=(postal.value||'').replace(/\D/g,'').slice(0,5);
+    if(postal.value!==code) postal.value=code;
+    list.innerHTML='';
+    if(hint) hint.textContent=code.length===5?'Recherche des communes…':'';
+    if(code.length!==5) return;
+    try{
+      const names=await citiesForPostalCode(code);
+      if(current!==seq) return;
+      list.innerHTML=names.map(n=>`<option value="${esc(n)}"></option>`).join('');
+      if(names.length===1) city.value=names[0];
+      else if(city.value && !names.some(n=>n.toLocaleLowerCase('fr')===city.value.toLocaleLowerCase('fr'))) city.value='';
+      if(hint) hint.textContent=names.length>1?`${names.length} communes disponibles — touchez le champ Ville pour choisir`:names.length===1?'Commune sélectionnée automatiquement':'Aucune commune trouvée — saisie manuelle possible';
+      if(names.length>1){ city.focus({preventScroll:true}); city.blur(); }
+    }catch(e){
+      if(current!==seq) return;
+      if(hint) hint.textContent='Recherche indisponible — vous pouvez saisir la ville manuellement';
+    }
+  };
+  postal.addEventListener('input',refresh);
+  postal.addEventListener('change',refresh);
+  postal.addEventListener('blur',refresh);
+  if((postal.value||'').length===5) refresh();
+}
+bindPostalCity('signupPostalCode','signupCity','signupCityList','signupCityHint');
+bindPostalCity('profilePostalCode','profileCity','profileCityList','profileCityHint');
+
  const address=$('signupAddress').value.trim(), postal=$('signupPostalCode').value.trim(), city=$('signupCity').value.trim();
  if(!first||!last||!phone||!address||!postal||!city) return message('Merci de compléter toutes vos coordonnées.',true);
  if(!$('signupTerms').checked) return message('Vous devez accepter les conditions du programme, les CGU et la politique de confidentialité.',true);
@@ -993,7 +1041,7 @@ $('mobileRefresh')?.addEventListener('click',async()=>{
     }
   }catch(e){console.warn('REFRESH',e)}
   const u=new URL(location.href);
-  u.searchParams.set('appv','16.1.1');
+  u.searchParams.set('appv','16.4');
   location.replace(u.toString());
 });
 
@@ -1109,7 +1157,7 @@ function renderAdminRows(){
  $('adminRows').innerHTML=table||'<tr><td colspan="7" class="muted">Aucune recommandation.</td></tr>';
  $('adminMobileRows').innerHTML=refs.map(r=>{
    const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
-   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><div class="controls" style="margin-top:8px"><select data-mpaystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>Paiement en cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Récompense validée</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Récompense payée</option></select><select data-mmethod="${r.id}"><option value="">Mode de paiement</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement bancaire</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
+   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div style="display:grid;gap:6px;margin:10px 0;padding:10px;background:#f7f7f8;border-radius:10px">${r.lead_phone?`<div>📞 <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a> · <a href="sms:${esc(r.lead_phone)}">SMS</a></div>`:''}${r.lead_email?`<div>✉️ <a href="mailto:${esc(r.lead_email)}">${esc(r.lead_email)}</a></div>`:''}<div>🏠 ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'Projet non renseigné')} · ${esc(r.property_type||'Type non renseigné')}</div>${r.relationship?`<div>🤝 ${esc(r.relationship)}</div>`:''}${r.notes?`<div>💬 ${esc(r.notes)}</div>`:''}<div>👤 Apporteur : ${esc(ap.first_name||'')} ${esc(ap.last_name||'')}${ap.phone?` · <a href="tel:${esc(ap.phone)}">${esc(ap.phone)}</a>`:''}</div><div class="muted">Reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><div class="controls" style="margin-top:8px"><select data-mpaystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>Paiement en cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Récompense validée</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Récompense payée</option></select><select data-mmethod="${r.id}"><option value="">Mode de paiement</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement bancaire</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
  }).join('')||'<p class="muted">Aucune recommandation.</p>';
  document.querySelectorAll('.adminSave').forEach(b=>b.onclick=()=>saveAdminReferral(b.dataset.id,b));
  document.querySelectorAll('.mobileSave').forEach(b=>b.onclick=async()=>{
@@ -1122,7 +1170,7 @@ function renderAdminRows(){
 }
 
 async function loadAdmin(){
-  const {data:profiles,error:pe}=await supabase.from('profiles').select('id,first_name,last_name,email,role');
+  const {data:profiles,error:pe}=await supabase.from('profiles').select('id,first_name,last_name,email,phone,role');
   const {data:refs,error:re}=await supabase.from('referrals').select('*').is('archived_at',null).order('created_at',{ascending:false});
   const {data:rems}=await supabase.from('remunerations').select('*');
   if(pe||re) return message('Chargement administration impossible.',true);
@@ -1164,12 +1212,12 @@ const STATUS_LABELS={new:'Nouvelle recommandation',to_contact:'À contacter',con
 let contactRows=[];
 async function loadContacts(){
   const {data:refs,error}=await supabase.from('referrals')
-    .select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,status,created_at')
+    .select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,notes,status,created_at')
     .is('archived_at',null).order('created_at',{ascending:false});
   if(error){$('contactsList').innerHTML='<p class="error">'+esc(error.message)+'</p>';return;}
   const ids=[...new Set((refs||[]).map(r=>r.referrer_id).filter(Boolean))]; let pmap={};
   if(ids.length){const {data:ps}=await supabase.from('profiles').select('id,first_name,last_name,email,phone').in('id',ids);pmap=Object.fromEntries((ps||[]).map(p=>[p.id,p]));}
-  contactRows=(refs||[]).map(r=>({...r,referrer_name:`${pmap[r.referrer_id]?.first_name||''} ${pmap[r.referrer_id]?.last_name||''}`.trim()}));
+  contactRows=(refs||[]).map(r=>({...r,referrer_name:`${pmap[r.referrer_id]?.first_name||''} ${pmap[r.referrer_id]?.last_name||''}`.trim(),referrer_phone:pmap[r.referrer_id]?.phone||'',referrer_email:pmap[r.referrer_id]?.email||''}));
   const sel=$('contactStatusFilter');
   if(sel && sel.options.length===1) Object.entries(STATUS_LABELS).forEach(([v,l])=>sel.add(new Option(l,v)));
   renderContacts();
@@ -1178,17 +1226,26 @@ function renderContacts(){
   const q=($('contactSearch')?.value||'').trim().toLowerCase(), st=$('contactStatusFilter')?.value||'';
   const rows=contactRows.filter(r=>(!st||r.status===st)&&(!q||`${r.lead_first_name} ${r.lead_last_name} ${r.lead_phone} ${r.lead_email} ${r.commune} ${r.referrer_name}`.toLowerCase().includes(q)));
   $('contactsList').innerHTML=rows.length?rows.map(r=>`
-    <article class="item">
+    <article class="item admin-contact-card" id="contact-${r.id}" data-referral-id="${r.id}">
       <div class="section-head">
-        <div><b>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</b>
+        <div><b style="font-size:18px">${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</b>
           <div class="muted">${esc(r.commune||'—')} · ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'—')} · ${esc(r.property_type||'—')}</div>
         </div>
         <span class="pill">${esc(STATUS_LABELS[r.status]||r.status||'—')}</span>
       </div>
-      <div class="muted">Apporteur : ${esc(r.referrer_name||'—')} · Transmis le ${excelDate(r.created_at)}</div>
-      <div style="margin-top:8px">${r.lead_phone?`📞 ${esc(r.lead_phone)}`:''} ${r.lead_email?` · ✉️ ${esc(r.lead_email)}`:''}</div>
+      <div style="display:grid;gap:7px;margin-top:12px">
+        ${r.lead_phone?`<div><b>📞 Téléphone :</b> <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a> · <a href="sms:${esc(r.lead_phone)}">SMS</a></div>`:'<div class="muted">Téléphone non renseigné</div>'}
+        ${r.lead_email?`<div><b>✉️ E-mail :</b> <a href="mailto:${esc(r.lead_email)}">${esc(r.lead_email)}</a></div>`:''}
+        <div><b>🏠 Projet :</b> ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'—')} · ${esc(r.property_type||'Type de bien non renseigné')}</div>
+        <div><b>📍 Commune :</b> ${esc(r.commune||'—')}</div>
+        <div><b>🤝 Lien avec l’apporteur :</b> ${esc(r.relationship||'Non renseigné')}</div>
+        ${r.notes?`<div style="padding:10px;background:#f7f7f8;border-radius:10px"><b>💬 Informations transmises :</b><br>${esc(r.notes)}</div>`:''}
+        <div style="padding-top:7px;border-top:1px solid #eee"><b>👤 Apporteur :</b> ${esc(r.referrer_name||'—')}${r.referrer_phone?` · <a href="tel:${esc(r.referrer_phone)}">${esc(r.referrer_phone)}</a>`:''}${r.referrer_email?` · <a href="mailto:${esc(r.referrer_email)}">${esc(r.referrer_email)}</a>`:''}</div>
+        <div class="muted">Recommandation reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div>
+      </div>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="light" onclick="window.openContactAdmin('${r.id}')">Ouvrir la fiche</button>
+        ${r.lead_phone?`<a class="primary" style="text-decoration:none" href="tel:${esc(r.lead_phone)}">📞 Appeler</a><a class="light" style="text-decoration:none" href="sms:${esc(r.lead_phone)}">💬 SMS</a>`:''}
+        ${r.lead_email?`<a class="light" style="text-decoration:none" href="mailto:${esc(r.lead_email)}">✉️ E-mail</a>`:''}
         <button class="light" onclick="window.archiveReferral('${r.id}')">📦 Archiver</button>
       </div>
     </article>`).join(''):'<p class="muted">Aucun contact recommandé actif.</p>';
@@ -1264,7 +1321,7 @@ function saveXlsx(sheets,filename){
 async function getExportData(){
  const [{data:profiles,error:pe},{data:refs,error:re}]=await Promise.all([
    supabase.from('profiles').select('id,role,first_name,last_name,email,phone,address,postal_code,city,created_at').order('created_at',{ascending:false}),
-   supabase.from('referrals').select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,status,created_at').order('created_at',{ascending:false})
+   supabase.from('referrals').select('id,referrer_id,lead_first_name,lead_last_name,lead_phone,lead_email,commune,project_type,property_type,relationship,notes,status,created_at').order('created_at',{ascending:false})
  ]);
  if(pe||re) throw pe||re;
  const pmap=Object.fromEntries((profiles||[]).map(p=>[p.id,p]));
@@ -1391,13 +1448,13 @@ async function loadNotifications(){
   const {data:{user}}=await supabase.auth.getUser();
   if(!user) return;
   const {data,error}=await supabase.from('notifications')
-    .select('id,title,body,created_at,read_at')
+    .select('id,title,body,created_at,read_at,referral_id')
     .eq('user_id',user.id).order('created_at',{ascending:false});
   const list=$('notificationsList');
   if(error){list.innerHTML='<p class="error">'+esc(error.message)+'</p>';return;}
 
   list.innerHTML=(data||[]).length?(data||[]).map(n=>`
-    <article class="item notification-card" data-notification-id="${n.id}" data-target="${notificationTarget(n)}"
+    <article class="item notification-card" data-notification-id="${n.id}" data-target="${notificationTarget(n)}" data-referral-id="${n.referral_id||''}"
       style="${n.read_at
         ? 'opacity:.62;background:#f5f5f5;border-left:4px solid #b7b7b7;'
         : 'opacity:1;background:#fff;border-left:4px solid #d81b60;box-shadow:0 4px 14px rgba(0,0,0,.06);'}">
@@ -1419,6 +1476,11 @@ async function loadNotifications(){
       if(ev.target.closest('button')) return;
       await supabase.from('notifications').update({read_at:new Date().toISOString()}).eq('id',card.dataset.notificationId).eq('user_id',user.id);
       await openMobileSection(card.dataset.target);
+      if(currentProfile?.role==='admin' && card.dataset.referralId){
+        await loadContacts();
+        const target=document.getElementById(`contact-${card.dataset.referralId}`);
+        if(target){target.scrollIntoView({behavior:'smooth',block:'center'});target.style.outline='3px solid #d81b60';target.style.outlineOffset='3px';setTimeout(()=>{target.style.outline='';target.style.outlineOffset=''},3500);}
+      }
     });
   });
   list.querySelectorAll('.notif-read-btn').forEach(btn=>{
