@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="/manifest.webmanifest?v=17.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=17.0">
-  <link rel="icon" type="image/png" href="/favicon.png?v=17.0">
+  <link rel="manifest" href="/manifest.webmanifest?v=17.4.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=17.4.1.1">
+  <link rel="icon" type="image/png" href="/favicon.png?v=17.4.1.1">
   <meta name="apple-mobile-web-app-title" content="Damien Reco">
   <title>Damien Recommandations</title>
   <style>
@@ -415,8 +415,20 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
 .delete-referrer,.delete-profile,[data-action='delete-referrer']{min-width:112px!important;height:46px!important;padding:0 14px!important;white-space:nowrap!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:14px!important}
 @media(max-width:700px){.admin-actions,.contact-actions,.referral-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style><style id="v17-4-actions">
-.contact-action-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.contact-action-grid a,.contact-action-grid button,.archive-action-grid button,.profile-actions button{min-height:48px;border-radius:15px;border:1px solid transparent;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;font:inherit;cursor:pointer;box-sizing:border-box}.action-call{background:#164b7d;color:white;box-shadow:0 7px 18px #164b7d2e}.action-sms{background:#e9f8fb;color:#147a90;border-color:#cceef4!important}.action-mail{background:#eef3f9;color:#163f68;border-color:#dce6f0!important}.action-archive{background:#f5f6f8;color:#34445b;border-color:#e2e6eb!important}.profile-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.soft-delete{background:#f4f6f8;color:#34445b;border-color:#dfe4ea!important}.hard-delete{background:#fff4f3;color:#b42318;border-color:#f4b8b2!important}.archive-action-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin-top:12px}.action-restore{background:#eaf7ef;color:#267247;border-color:#cdebd8!important}@media(max-width:700px){.contact-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-actions{display:grid;grid-template-columns:1fr;min-width:155px}.profile-actions button{width:100%;font-size:12px;line-height:1.15}.archive-action-grid{grid-template-columns:1fr}}</style></head>
-<body data-app-version="17.4">
+.contact-action-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.contact-action-grid a,.contact-action-grid button,.archive-action-grid button,.profile-actions button{min-height:48px;border-radius:15px;border:1px solid transparent;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;font:inherit;cursor:pointer;box-sizing:border-box}.action-call{background:#164b7d;color:white;box-shadow:0 7px 18px #164b7d2e}.action-sms{background:#e9f8fb;color:#147a90;border-color:#cceef4!important}.action-mail{background:#eef3f9;color:#163f68;border-color:#dce6f0!important}.action-archive{background:#f5f6f8;color:#34445b;border-color:#e2e6eb!important}.profile-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.soft-delete{background:#f4f6f8;color:#34445b;border-color:#dfe4ea!important}.hard-delete{background:#fff4f3;color:#b42318;border-color:#f4b8b2!important}.archive-action-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin-top:12px}.action-restore{background:#eaf7ef;color:#267247;border-color:#cdebd8!important}@media(max-width:700px){.contact-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-actions{display:grid;grid-template-columns:1fr;min-width:155px}.profile-actions button{width:100%;font-size:12px;line-height:1.15}.archive-action-grid{grid-template-columns:1fr}}</style><style id="v17-4-1-fixes">
+/* Stable referrer card grid: desktop and mobile */
+.leader-card{grid-template-columns:42px minmax(210px,1.35fr) repeat(4,minmax(85px,.7fr)) minmax(185px,.9fr)!important;column-gap:14px!important;align-items:center!important}
+.leader-identity{min-width:0}.leader-identity strong,.leader-identity small{overflow-wrap:anywhere}
+.leader-card .profile-actions{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;width:100%!important;min-width:0!important}
+.leader-card .profile-actions button{width:100%!important;min-width:0!important;height:44px!important;padding:7px 10px!important;font-size:12px!important;line-height:1.15!important}
+@media(max-width:700px){
+ .leader-card{grid-template-columns:42px minmax(0,1fr) 145px!important;gap:10px!important;padding:16px 10px!important}
+ .leader-card .rank{grid-column:1}.leader-card .leader-identity{grid-column:2}.leader-card .profile-actions{grid-column:3;grid-row:1}
+ .leader-card .metric{display:none!important}.leader-card .profile-actions button{height:46px!important;font-size:12px!important}
+}
+.archive-local-feedback{display:none;margin-top:10px;padding:11px 13px;border-radius:12px;font-weight:750;font-size:13px}.archive-local-feedback.show{display:block}.archive-local-feedback.success{background:#eaf7ef;color:#267247;border:1px solid #cdebd8}.archive-local-feedback.error{background:#fff1f0;color:#b42318;border:1px solid #f4b8b2}.hidden-actions{opacity:.4;pointer-events:none}
+</style></head>
+<body data-app-version="17.4.1">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -664,7 +676,7 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="17.4" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="17.4.1" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -811,7 +823,7 @@ function actionFeedback(button,text,err=false){
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 
-// V17.4 — Sélection des communes par code postal, identique PC / mobile
+// V17.4.1 — Sélection des communes par code postal, identique PC / mobile
 const cityLookupCache = new Map();
 async function citiesForPostalCode(postal){
   const code=(postal||'').replace(/\D/g,'').slice(0,5);
@@ -1169,7 +1181,7 @@ function renderReferrers(rows){
    const tier=i===0?'gold':i===1?'silver':i===2?'bronze':'';
    return `<div class="leader-card">
      <div class="rank">${i+1}</div>
-     <div><strong>${a.first_name||''} ${a.last_name||''}</strong><small>${a.email||''} · ${a.phone||''}</small><span class="tier ${tier}">${status}</span></div>
+     <div class="leader-identity"><strong>${a.first_name||''} ${a.last_name||''}</strong><small>${a.email||''} · ${a.phone||''}</small><span class="tier ${tier}">${status}</span></div>
      <div class="metric"><small>Recommandations</small><b>${a.recommendations}</b></div>
      <div class="metric"><small>Mandats</small><b>${a.mandates}</b></div>
      <div class="metric"><small>Ventes</small><b>${a.sales}</b></div>
@@ -1303,7 +1315,7 @@ function renderContacts(){
         <div style="padding-top:7px;border-top:1px solid #eee"><b>👤 Apporteur :</b> ${esc(r.referrer_name||'—')}${r.referrer_phone?` · <a href="tel:${esc(r.referrer_phone)}">${esc(r.referrer_phone)}</a>`:''}${r.referrer_email?` · <a href="mailto:${esc(r.referrer_email)}">${esc(r.referrer_email)}</a>`:''}</div>
         <div class="muted">Recommandation reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div>
       </div>
-      <div class="contact-action-grid">${r.lead_phone?`<a class="action-call" href="tel:${esc(r.lead_phone)}">📞 <b>Appeler</b></a><a class="action-sms" href="sms:${esc(r.lead_phone)}">💬 <b>SMS</b></a>`:''}${r.lead_email?`<a class="action-mail" href="mailto:${esc(r.lead_email)}">✉️ <b>E-mail</b></a>`:''}<button class="action-archive" onclick="window.archiveReferral('${r.id}')">📦 <b>Archiver</b></button></div>
+      <div class="contact-action-grid">${r.lead_phone?`<a class="action-call" href="tel:${esc(r.lead_phone)}">📞 <b>Appeler</b></a><a class="action-sms" href="sms:${esc(r.lead_phone)}">💬 <b>SMS</b></a>`:''}${r.lead_email?`<a class="action-mail" href="mailto:${esc(r.lead_email)}">✉️ <b>E-mail</b></a>`:''}<button class="action-archive" onclick="window.archiveReferral('${r.id}')">📦 <b>Archiver</b></button></div><div class="archive-local-feedback" aria-live="polite"></div>
     </article>`).join(''):'<p class="muted">Aucun contact recommandé actif.</p>';
 }
 window.openContactAdmin=async function(id){
@@ -1352,15 +1364,20 @@ function renderArchives(){
   const q=($('archiveSearch')?.value||'').toLowerCase(), reason=$('archiveReasonFilter')?.value||'';
   const rows=archiveRows.filter(r=>(!reason||r.archive_reason===reason)&&(!q||`${r.lead_first_name} ${r.lead_last_name} ${r.commune} ${r.referrer_name}`.toLowerCase().includes(q)));
   $('archivesList').innerHTML=rows.length?rows.map(r=>`
-    <article class="item">
+    <article class="item archive-item" id="archive-${r.id}">
       <div class="section-head"><div><b>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</b><div class="muted">${esc(r.commune||'')} · ${esc(r.project_type||'')} · ${esc(r.property_type||'')}</div></div>
       <span class="pill">${esc(ARCHIVE_LABELS[r.archive_reason]||r.archive_reason||'Archivé')}</span></div>
       <div class="muted">Apporteur : ${esc(r.referrer_name||'—')} · Archivé le ${excelDate(r.archived_at)}</div>
-      <div class="archive-action-grid"><button class="action-restore" onclick="window.restoreReferral('${r.id}')">↩️ <b>Réactiver le dossier</b></button><button class="hard-delete" onclick="window.deleteArchivedReferral('${r.id}','${esc((r.lead_first_name||'')+' '+(r.lead_last_name||''))}')">🗑️ <b>Supprimer définitivement</b></button></div>
+      <div class="archive-action-grid"><button class="action-restore" onclick="window.restoreReferral('${r.id}')">↩️ <b>Réactiver le dossier</b></button><button class="hard-delete" onclick="window.deleteArchivedReferral('${r.id}','${esc((r.lead_first_name||'')+' '+(r.lead_last_name||''))}')">🗑️ <b>Supprimer définitivement</b></button></div><div class="archive-local-feedback" aria-live="polite"></div>
     </article>`).join(''):'<p class="muted">Aucun dossier archivé.</p>';
 }
 window.restoreReferral=restoreReferral;
-async function deleteArchivedReferral(id,name){if(!confirm(`Supprimer définitivement le dossier ${name||''} ?\n\nCette action est irréversible.`))return;try{const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Session administrateur expirée');const res=await fetch(`${SUPABASE_URL}/functions/v1/delete-referral`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({referral_id:id})});const out=await res.json().catch(()=>({}));if(!res.ok)throw new Error(out.error||'Suppression impossible');message('Dossier supprimé définitivement.');await loadArchives();await loadAdmin();}catch(err){message(err.message,true)}} window.deleteArchivedReferral=deleteArchivedReferral;
+async function deleteArchivedReferral(id,name){
+ const card=document.getElementById(`archive-${id}`), feedback=card?.querySelector('.archive-local-feedback');
+ if(!confirm(`Supprimer définitivement le dossier ${name||''} ?\n\nCette action est irréversible.`))return;
+ try{const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Session administrateur expirée');const res=await fetch(`${SUPABASE_URL}/functions/v1/delete-referral`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({referral_id:id})});const out=await res.json().catch(()=>({}));if(!res.ok)throw new Error(out.error||'Suppression impossible');
+ if(feedback){feedback.textContent='✓ Dossier supprimé définitivement.';feedback.className='archive-local-feedback success show';card.querySelector('.archive-action-grid')?.classList.add('hidden-actions');setTimeout(async()=>{await loadArchives();await loadAdmin()},1300)}else{await loadArchives();await loadAdmin()}
+ }catch(err){if(feedback){feedback.textContent=err.message;feedback.className='archive-local-feedback error show'}else message(err.message,true)}} window.deleteArchivedReferral=deleteArchivedReferral;
 $('refreshArchives')?.addEventListener('click',loadArchives);
 $('archiveSearch')?.addEventListener('input',renderArchives);
 $('archiveReasonFilter')?.addEventListener('change',renderArchives);
@@ -1529,7 +1546,7 @@ async function loadNotifications(){
       <div class="notification-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
         ${n.read_at?'':`<button type="button" class="light notif-read-btn" data-id="${n.id}">✓ Marquer comme lue</button>`}
         <button type="button" class="light notif-delete-btn" data-id="${n.id}">🗑️ Supprimer</button>
-      </div>
+      </div><div class="archive-local-feedback" aria-live="polite"></div>
     </article>`).join(''):'<p class="muted">Aucune notification.</p>';
 
   list.querySelectorAll('.notification-card').forEach(card=>{

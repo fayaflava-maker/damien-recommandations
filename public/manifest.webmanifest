@@ -1,7 +1,7 @@
 {
   "name": "Damien Recommandations",
   "short_name": "Damien Reco",
-  "start_url": "/",
+  "start_url": "/?v=17.4.1",
   "display": "standalone",
   "background_color": "#f7f9f7",
   "theme_color": "#ffffff",
