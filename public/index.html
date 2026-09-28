@@ -396,8 +396,21 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
 #auth{max-width:760px;margin-left:auto;margin-right:auto}#auth h2:before{content:"";display:inline-block;width:46px;height:46px;background:url('/icons/v17-logo.png') center/cover;border-radius:13px;vertical-align:middle;margin-right:12px;box-shadow:0 5px 15px rgba(16,47,85,.12)}
 @media(max-width:700px){main.wrap{padding-left:12px!important;padding-right:12px!important}.card{padding:18px!important}.v14-stats{gap:8px!important}.v14-stat{border-radius:16px!important}.brandline:before{width:48px;height:48px;border-radius:14px}.brand{font-size:18px!important}.admin-hero{padding:20px!important}.tracking-block{padding:15px!important}}
 </style>
+
+<style id="v17-2-final-fixes">
+#mobileQuickActions #mobileRefresh{background:#123d68!important;color:#fff!important;border-radius:50%!important;width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;box-shadow:0 6px 16px rgba(18,61,104,.28)!important;font-weight:700!important}
+#mobileQuickActions #mobileRefresh.refreshing{animation:v17spin .65s linear infinite}@keyframes v17spin{to{transform:rotate(360deg)}}
+.tracking-timeline{overflow-x:auto!important;scrollbar-width:none;padding:8px 4px 4px!important}.tracking-timeline::-webkit-scrollbar{display:none}
+.tracking-timeline .step{min-width:118px!important;color:#8d98aa!important}.tracking-timeline .step i{background:#e1e6ed!important;border-color:#e1e6ed!important}
+.tracking-timeline .step.done{color:#63ad2d!important}.tracking-timeline .step.done i{background:#63ad2d!important;border-color:#63ad2d!important}
+.tracking-timeline .step.current{color:#14758a!important;font-weight:800!important}.tracking-timeline .step.current i{background:#31abc5!important;border-color:#31abc5!important;box-shadow:0 0 0 5px rgba(49,171,197,.14)!important}
+.tracking-timeline .step.future{color:#929daf!important}.tracking-timeline .step.future i{background:#e1e6ed!important;border-color:#e1e6ed!important}
+.status-on_hold,.status-upcoming{background:#fff0d5!important;color:#966000!important}.status-without_follow_up{background:#edf0f4!important;color:#687386!important}
+.hold-note{grid-column:1/-1;background:#fff7e7;color:#8a5b08;border:1px solid #f4d99c;border-radius:14px;padding:10px 12px;font-weight:700;margin-top:5px}
+.admin-kpi:nth-child(3){border-top-color:#f4cf28!important}
+</style>
 </head>
-<body data-app-version="17.1">
+<body data-app-version="17.2">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -645,7 +658,7 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="17.1" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="17.2" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -661,7 +674,7 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
       <div class="admin-kpis">
         <div class="admin-kpi"><span>Recommandations</span><b id="kpiRefs">0</b></div>
         <div class="admin-kpi"><span>Mandats / ventes</span><b id="kpiSales">0</b></div>
-        <div class="admin-kpi"><span>À rémunérer</span><b id="kpiPay">0 €</b></div>
+        <div class="admin-kpi"><span>Récompenses versées</span><b id="kpiPay">0 €</b></div>
         <div class="admin-kpi"><span>Taux de conversion</span><b id="kpiConversion">0 %</b></div>
       </div>
 
@@ -792,7 +805,7 @@ function actionFeedback(button,text,err=false){
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 
-// V16.5 — Sélection des communes par code postal, identique PC / mobile
+// V17.2 — Sélection des communes par code postal, identique PC / mobile
 const cityLookupCache = new Map();
 async function citiesForPostalCode(postal){
   const code=(postal||'').replace(/\D/g,'').slice(0,5);
@@ -967,17 +980,20 @@ async function loadReferrals(){
  const {data,error}=await supabase.from('referrals').select('*').order('created_at',{ascending:false});
  if(error) return message('Impossible de charger les recommandations : '+error.message,true);
  const rows=data||[];
- const flow=['new','upcoming','confirmed','mandate','sold','validated','paid'];
- const normalizedStatus=s=>['to_contact','contacted','appointment'].includes(s)?'upcoming':s==='closed'?'without_follow_up':s;
+ const flow=['new','contact_established','appointment_estimate','mandate','under_offer','under_compromise','sold'];
+ const normalizedStatus=s=>({to_contact:'new',contacted:'contact_established',confirmed:'contact_established',appointment:'appointment_estimate',closed:'without_follow_up'})[s]||s;
  const closedStatuses=['paid','closed','without_follow_up'];
  const isClosed=r=>!!r.archived_at || closedStatuses.includes(r.status);
  const active=rows.filter(r=>!isClosed(r)), closed=rows.filter(isClosed);
  const projectLabel=r=>r.project_type==='sale'?'Vente':r.project_type==='valuation'?'Estimation':r.project_type==='advice'?'Conseils':'Autre';
  const initials=r=>((r.lead_first_name?.[0]||'')+(r.lead_last_name?.[0]||'')).toUpperCase()||'—';
  const activeCard=r=>{
-   const current=Math.max(0,flow.indexOf(normalizedStatus(r.status)));
-   const steps=flow.map((st,i)=>`<div class="step ${i<=current?'done':''}"><i></i>${labels[st]}</div>`).join('');
-   return `<article class="tracking-row"><div class="tracking-contact"><span class="contact-initials">${esc(initials(r))}</span><div><strong>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</strong><small>${esc(projectLabel(r))}</small></div></div><div class="tracking-place">${esc(r.commune||'—')}</div><div><span class="status">${esc(labels[r.status]||r.status)}</span></div><div class="tracking-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div><div class="timeline tracking-timeline">${steps}</div></article>`;
+   const ns=normalizedStatus(r.status);
+   const current=flow.indexOf(ns);
+   const isHold=ns==='on_hold'||ns==='upcoming';
+   const steps=flow.map((st,i)=>{ const cls=current<0?'future':i<current?'done':i===current?'current':'future'; return `<div class="step ${cls}"><i></i>${labels[st]}</div>`; }).join('');
+   const holdNote=isHold?`<div class="hold-note">⏸ Projet en attente — le dossier reste actif et pourra reprendre son parcours.</div>`:'';
+   return `<article class="tracking-row"><div class="tracking-contact"><span class="contact-initials">${esc(initials(r))}</span><div><strong>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</strong><small>${esc(projectLabel(r))}</small></div></div><div class="tracking-place">${esc(r.commune||'—')}</div><div><span class="status status-${esc(ns)}">${esc(labels[r.status]||r.status)}</span></div><div class="tracking-date">${new Date(r.created_at).toLocaleDateString('fr-FR')}</div>${holdNote}<div class="timeline tracking-timeline">${steps}</div></article>`;
  };
  const closedCard=r=>{
    const successful=['sold','validated','pending','paid'].includes(r.status) || r.archive_reason==='completed';
@@ -1078,26 +1094,13 @@ $('bottomNav')?.addEventListener('click',e=>{
 });
 $('mobileNotifications')?.addEventListener('click',()=>openMobileSection('notificationsPanel'));
 $('mobileRefresh')?.addEventListener('click',async()=>{
-  const btn=$('mobileRefresh');
-  if(btn){btn.disabled=true;btn.textContent='…';}
+  const btn=$('mobileRefresh'); const original=btn?.textContent||'↻';
+  if(btn){btn.disabled=true;btn.textContent='↻';btn.classList.add('refreshing');}
   try{
-    if(currentProfile?.role==='admin'){
-      await Promise.all([loadAdmin(),loadReferrers(),loadNotifications()]);
-    }else{
-      await refreshReferrerInterface();
-    }
-    if('serviceWorker' in navigator){
-      const regs=await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(reg=>reg.unregister()));
-    }
-    if('caches' in window){
-      const keys=await caches.keys();
-      await Promise.all(keys.filter(k=>k.startsWith('damien-recommandations')).map(k=>caches.delete(k)));
-    }
+    if(currentProfile?.role==='admin') await Promise.all([loadAdmin(),loadReferrers(),loadNotifications()]);
+    else await Promise.all([refreshReferrerDashboard(currentProfile),loadReferrals(),loadEarnings(),loadNotifications()]);
   }catch(e){console.warn('REFRESH',e)}
-  const u=new URL(location.href);
-  u.searchParams.set('appv','16.5');
-  location.replace(u.toString());
+  finally{if(btn){btn.disabled=false;btn.textContent=original;btn.classList.remove('refreshing');}}
 });
 
 $('heroRecommend').onclick=async()=>{
@@ -1232,8 +1235,8 @@ async function loadAdmin(){
   const people=Object.fromEntries((profiles||[]).map(x=>[x.id,x]));
   $('kpiRefs').textContent=(refs||[]).length;
   $('kpiSales').textContent=(refs||[]).filter(x=>['mandate','sold','validated','pending','paid'].includes(x.status)).length;
-  const due=(rems||[]).filter(x=>['pending','validated'].includes(x.status)).reduce((a,x)=>a+Number(x.amount||0),0);
-  $('kpiPay').textContent=due.toLocaleString('fr-FR')+' €';
+  const paidRewards=(rems||[]).filter(x=>x.status==='paid').reduce((a,x)=>a+Number(x.amount||0),0);
+  $('kpiPay').textContent=paidRewards.toLocaleString('fr-FR')+' €';
   const converted=(refs||[]).filter(x=>['mandate','sold','validated','pending','paid'].includes(x.status)).length;
   $('kpiConversion').textContent=((refs||[]).length?Math.round(converted/(refs||[]).length*100):0)+' %';
   adminReferralCache=refs||[]; adminPeople=people; adminRemByRef=Object.fromEntries((rems||[]).map(x=>[x.referral_id,x]));
@@ -1263,7 +1266,7 @@ async function saveAdminReferral(id,sourceButton=null){
 
 
 const PROJECT_LABELS={sale:'Projet de vente',valuation:'Demande d’estimation',advice:'Demande de conseil',other:'Autre projet'};
-const STATUS_LABELS={new:'Nouvelle recommandation',to_contact:'À contacter',contacted:'Contact établi',appointment:'Rendez-vous / estimation',confirmed:'Projet confirmé',mandate:'Mandat signé',sold:'Bien vendu',validated:'Rémunération validée',pending:'Paiement en cours',paid:'Paiement effectué',closed:'Clôturé',without_follow_up:'Sans suite'};
+const STATUS_LABELS={...labels,new:'Nouvelle recommandation',to_contact:'Nouvelle recommandation',contacted:'Contact établi',appointment:'RDV / Estimation',confirmed:'Contact établi',mandate:'Mandat signé',sold:'Bien vendu',validated:'Récompense validée',pending:'Récompense en cours',paid:'Récompense payée',closed:'Sans suite',without_follow_up:'Sans suite'};
 let contactRows=[];
 async function loadContacts(){
   const {data:refs,error}=await supabase.from('referrals')
