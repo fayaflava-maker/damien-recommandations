@@ -414,8 +414,9 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
 .admin-actions a,.admin-actions button,.contact-actions a,.contact-actions button,.referral-actions a,.referral-actions button{width:100%!important;min-width:0!important;height:48px!important;padding:0 10px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;white-space:nowrap!important;border-radius:14px!important;box-sizing:border-box!important}
 .delete-referrer,.delete-profile,[data-action='delete-referrer']{min-width:112px!important;height:46px!important;padding:0 14px!important;white-space:nowrap!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:14px!important}
 @media(max-width:700px){.admin-actions,.contact-actions,.referral-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-</style></head>
-<body data-app-version="17.3">
+</style><style id="v17-4-actions">
+.contact-action-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.contact-action-grid a,.contact-action-grid button,.archive-action-grid button,.profile-actions button{min-height:48px;border-radius:15px;border:1px solid transparent;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;font:inherit;cursor:pointer;box-sizing:border-box}.action-call{background:#164b7d;color:white;box-shadow:0 7px 18px #164b7d2e}.action-sms{background:#e9f8fb;color:#147a90;border-color:#cceef4!important}.action-mail{background:#eef3f9;color:#163f68;border-color:#dce6f0!important}.action-archive{background:#f5f6f8;color:#34445b;border-color:#e2e6eb!important}.profile-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}.soft-delete{background:#f4f6f8;color:#34445b;border-color:#dfe4ea!important}.hard-delete{background:#fff4f3;color:#b42318;border-color:#f4b8b2!important}.archive-action-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:10px;margin-top:12px}.action-restore{background:#eaf7ef;color:#267247;border-color:#cdebd8!important}@media(max-width:700px){.contact-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.profile-actions{display:grid;grid-template-columns:1fr;min-width:155px}.profile-actions button{width:100%;font-size:12px;line-height:1.15}.archive-action-grid{grid-template-columns:1fr}}</style></head>
+<body data-app-version="17.4">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -663,7 +664,7 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="17.3" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="17.4" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -810,7 +811,7 @@ function actionFeedback(button,text,err=false){
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 
-// V17.3 — Sélection des communes par code postal, identique PC / mobile
+// V17.4 — Sélection des communes par code postal, identique PC / mobile
 const cityLookupCache = new Map();
 async function citiesForPostalCode(postal){
   const code=(postal||'').replace(/\D/g,'').slice(0,5);
@@ -1140,7 +1141,7 @@ async function loadEarnings(){
 
 let referrerCache=[];
 async function loadReferrers(){
- const {data:profiles,error}=await supabase.from('profiles').select('id,first_name,last_name,email,phone,role,referral_code').eq('role','referrer');
+ const {data:profiles,error}=await supabase.from('profiles').select('id,first_name,last_name,email,phone,role,referral_code,is_active').eq('role','referrer').eq('is_active',true);
  if(error) return;
  const {data:refs}=await supabase.from('referrals').select('id,referrer_id,status');
  const {data:rems}=await supabase.from('remunerations').select('referral_id,amount,promised_amount,status');
@@ -1173,7 +1174,7 @@ function renderReferrers(rows){
      <div class="metric"><small>Mandats</small><b>${a.mandates}</b></div>
      <div class="metric"><small>Ventes</small><b>${a.sales}</b></div>
      <div class="metric"><small>Perçu</small><b>${a.paid.toLocaleString('fr-FR')} €</b><small>${a.due.toLocaleString('fr-FR')} € à payer</small></div>
-     <div><button type="button" class="danger-btn deleteReferrer" data-id="${a.id}" data-name="${esc((a.first_name||'')+' '+(a.last_name||''))}">Supprimer</button></div>
+     <div class="profile-actions"><button type="button" class="soft-delete deactivateReferrer" data-id="${a.id}" data-name="${esc((a.first_name||'')+' '+(a.last_name||''))}">Supprimer</button><button type="button" class="hard-delete deleteReferrer" data-id="${a.id}" data-name="${esc((a.first_name||'')+' '+(a.last_name||''))}">Supprimer définitivement</button></div>
    </div>`;
  }).join('')||'<p class="muted">Aucun apporteur enregistré.</p>';
 }
@@ -1184,19 +1185,15 @@ function filterReferrers(){
 $('referrerSearch').oninput=filterReferrers;
 $('referrerSort').onchange=filterReferrers;
 $('referrerCards')?.addEventListener('click',async e=>{
- const btn=e.target.closest('.deleteReferrer'); if(!btn) return;
- const name=btn.dataset.name||'cet apporteur';
- if(!confirm(`Supprimer définitivement le profil de ${name} ?\n\nSon compte de connexion et ses données associées seront supprimés. Cette action est irréversible.`)) return;
- btn.disabled=true; btn.textContent='Suppression…';
- try{
-   const {data:{session}}=await supabase.auth.getSession();
-   if(!session) throw new Error('Session administrateur expirée');
-   const res=await fetch(`${SUPABASE_URL}/functions/v1/delete-referrer`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({user_id:btn.dataset.id})});
-   const out=await res.json().catch(()=>({}));
-   if(!res.ok) throw new Error(out.error||'Suppression impossible');
-   await loadReferrers(); await loadAdmin();
-   message(`Profil de ${name} supprimé définitivement.`);
- }catch(err){btn.disabled=false;btn.textContent='Supprimer le profil';message(err.message,true)}
+ const soft=e.target.closest('.deactivateReferrer'), hard=e.target.closest('.deleteReferrer'), btn=soft||hard;if(!btn)return;
+ const name=btn.dataset.name||'cet apporteur', permanent=!!hard;
+ if(!confirm(permanent?`Supprimer définitivement ${name} et tout son historique ?\n\nCette action est irréversible.`:`Supprimer ${name} des apporteurs actifs ?\n\nSon historique sera conservé et son accès désactivé.`))return;
+ const initial=btn.textContent;btn.disabled=true;btn.textContent=permanent?'Suppression…':'Suppression…';
+ try{const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Session administrateur expirée');
+ const fn=permanent?'delete-referrer':'deactivate-referrer',payload=permanent?{user_id:btn.dataset.id,delete_history:true}:{user_id:btn.dataset.id};
+ const res=await fetch(`${SUPABASE_URL}/functions/v1/${fn}`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify(payload)});
+ const out=await res.json().catch(()=>({}));if(!res.ok)throw new Error(out.error||'Action impossible');await loadReferrers();await loadAdmin();message(permanent?'Profil et historique supprimés définitivement.':'Profil retiré des apporteurs actifs.');}
+ catch(err){btn.disabled=false;btn.textContent=initial;message(err.message,true)}
 });
 
 
@@ -1220,7 +1217,7 @@ function renderAdminRows(){
  $('adminRows').innerHTML=table||'<tr><td colspan="7" class="muted">Aucune recommandation.</td></tr>';
  $('adminMobileRows').innerHTML=refs.map(r=>{
    const ap=adminPeople[r.referrer_id]||{}, rem=adminRemByRef[r.id];
-   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div style="display:grid;gap:6px;margin:10px 0;padding:10px;background:#f7f7f8;border-radius:10px">${r.lead_phone?`<div>📞 <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a> · <a href="sms:${esc(r.lead_phone)}">SMS</a></div>`:''}${r.lead_email?`<div>✉️ <a href="mailto:${esc(r.lead_email)}">${esc(r.lead_email)}</a></div>`:''}<div>🏠 ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'Projet non renseigné')} · ${esc(r.property_type||'Type non renseigné')}</div>${r.relationship?`<div>🤝 ${esc(r.relationship)}</div>`:''}${r.notes?`<div>💬 ${esc(r.notes)}</div>`:''}<div>👤 Apporteur : ${esc(ap.first_name||'')} ${esc(ap.last_name||'')}${ap.phone?` · <a href="tel:${esc(ap.phone)}">${esc(ap.phone)}</a>`:''}</div><div class="muted">Reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><div class="controls" style="margin-top:8px"><select data-mpaystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>Récompense en cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Récompense validée</option><option value="available" ${rem?.status==='available'?'selected':''}>Récompense disponible</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Récompense payée</option></select><select data-mmethod="${r.id}"><option value="">Mode de paiement</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement bancaire</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
+   return `<div class="mobile-ref-card"><div class="top"><div><div class="name">${r.lead_first_name||''} ${r.lead_last_name||''}</div><div class="meta">${r.commune||'Commune non renseignée'} · Apporteur : ${ap.first_name||''} ${ap.last_name||''}</div></div><span class="status">${labels[r.status]||r.status}</span></div><div style="display:grid;gap:6px;margin:10px 0;padding:10px;background:#f7f7f8;border-radius:10px">${r.lead_phone?`<div>📞 <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a></div>`:''}${r.lead_email?`<div>✉️ <a href="mailto:${esc(r.lead_email)}">${esc(r.lead_email)}</a></div>`:''}<div>🏠 ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'Projet non renseigné')} · ${esc(r.property_type||'Type non renseigné')}</div>${r.relationship?`<div>🤝 ${esc(r.relationship)}</div>`:''}${r.notes?`<div>💬 ${esc(r.notes)}</div>`:''}<div>👤 Apporteur : ${esc(ap.first_name||'')} ${esc(ap.last_name||'')}${ap.phone?` · <a href="tel:${esc(ap.phone)}">${esc(ap.phone)}</a>`:''}</div><div class="muted">Reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div></div><div class="controls"><select data-mstatus="${r.id}">${statusOptions.replace(`value="${r.status}"`,`value="${r.status}" selected`)}</select><input data-mamount="${r.id}" type="number" min="0" step="0.01" placeholder="Rémunération LGM €" value="${rem?.lgm_received_amount??''}"></div><div class="controls" style="margin-top:8px"><select data-mpaystatus="${r.id}"><option value="pending" ${rem?.status==='pending'?'selected':''}>Récompense en cours</option><option value="validated" ${rem?.status==='validated'?'selected':''}>Récompense validée</option><option value="available" ${rem?.status==='available'?'selected':''}>Récompense disponible</option><option value="paid" ${rem?.status==='paid'?'selected':''}>Récompense payée</option></select><select data-mmethod="${r.id}"><option value="">Mode de paiement</option><option value="bank_transfer" ${rem?.payment_method==='bank_transfer'?'selected':''}>Virement bancaire</option><option value="gift_card" ${rem?.payment_method==='gift_card'?'selected':''}>Carte cadeau</option></select></div><button class="primary mobileSave" data-id="${r.id}" style="width:100%;margin-top:9px">Mettre à jour le suivi</button></div>`;
  }).join('')||'<p class="muted">Aucune recommandation.</p>';
  document.querySelectorAll('.adminSave').forEach(b=>b.onclick=()=>saveAdminReferral(b.dataset.id,b));
  document.querySelectorAll('.mobileSave').forEach(b=>b.onclick=async()=>{
@@ -1297,7 +1294,7 @@ function renderContacts(){
         <span class="pill">${esc(STATUS_LABELS[r.status]||r.status||'—')}</span>
       </div>
       <div style="display:grid;gap:7px;margin-top:12px">
-        ${r.lead_phone?`<div><b>📞 Téléphone :</b> <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a> · <a href="sms:${esc(r.lead_phone)}">SMS</a></div>`:'<div class="muted">Téléphone non renseigné</div>'}
+        ${r.lead_phone?`<div><b>📞 Téléphone :</b> <a href="tel:${esc(r.lead_phone)}">${esc(r.lead_phone)}</a></div>`:'<div class="muted">Téléphone non renseigné</div>'}
         ${r.lead_email?`<div><b>✉️ E-mail :</b> <a href="mailto:${esc(r.lead_email)}">${esc(r.lead_email)}</a></div>`:''}
         <div><b>🏠 Projet :</b> ${esc(PROJECT_LABELS[r.project_type]||r.project_type||'—')} · ${esc(r.property_type||'Type de bien non renseigné')}</div>
         <div><b>📍 Commune :</b> ${esc(r.commune||'—')}</div>
@@ -1306,11 +1303,7 @@ function renderContacts(){
         <div style="padding-top:7px;border-top:1px solid #eee"><b>👤 Apporteur :</b> ${esc(r.referrer_name||'—')}${r.referrer_phone?` · <a href="tel:${esc(r.referrer_phone)}">${esc(r.referrer_phone)}</a>`:''}${r.referrer_email?` · <a href="mailto:${esc(r.referrer_email)}">${esc(r.referrer_email)}</a>`:''}</div>
         <div class="muted">Recommandation reçue le ${new Date(r.created_at).toLocaleString('fr-FR')}</div>
       </div>
-      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        ${r.lead_phone?`<a class="primary" style="text-decoration:none" href="tel:${esc(r.lead_phone)}">📞 Appeler</a><a class="light" style="text-decoration:none" href="sms:${esc(r.lead_phone)}">💬 SMS</a>`:''}
-        ${r.lead_email?`<a class="light" style="text-decoration:none" href="mailto:${esc(r.lead_email)}">✉️ E-mail</a>`:''}
-        <button class="light" onclick="window.archiveReferral('${r.id}')">📦 Archiver</button>
-      </div>
+      <div class="contact-action-grid">${r.lead_phone?`<a class="action-call" href="tel:${esc(r.lead_phone)}">📞 <b>Appeler</b></a><a class="action-sms" href="sms:${esc(r.lead_phone)}">💬 <b>SMS</b></a>`:''}${r.lead_email?`<a class="action-mail" href="mailto:${esc(r.lead_email)}">✉️ <b>E-mail</b></a>`:''}<button class="action-archive" onclick="window.archiveReferral('${r.id}')">📦 <b>Archiver</b></button></div>
     </article>`).join(''):'<p class="muted">Aucun contact recommandé actif.</p>';
 }
 window.openContactAdmin=async function(id){
@@ -1363,10 +1356,11 @@ function renderArchives(){
       <div class="section-head"><div><b>${esc(r.lead_first_name||'')} ${esc(r.lead_last_name||'')}</b><div class="muted">${esc(r.commune||'')} · ${esc(r.project_type||'')} · ${esc(r.property_type||'')}</div></div>
       <span class="pill">${esc(ARCHIVE_LABELS[r.archive_reason]||r.archive_reason||'Archivé')}</span></div>
       <div class="muted">Apporteur : ${esc(r.referrer_name||'—')} · Archivé le ${excelDate(r.archived_at)}</div>
-      <div style="margin-top:10px"><button class="light" onclick="window.restoreReferral('${r.id}')">Réactiver le dossier</button></div>
+      <div class="archive-action-grid"><button class="action-restore" onclick="window.restoreReferral('${r.id}')">↩️ <b>Réactiver le dossier</b></button><button class="hard-delete" onclick="window.deleteArchivedReferral('${r.id}','${esc((r.lead_first_name||'')+' '+(r.lead_last_name||''))}')">🗑️ <b>Supprimer définitivement</b></button></div>
     </article>`).join(''):'<p class="muted">Aucun dossier archivé.</p>';
 }
 window.restoreReferral=restoreReferral;
+async function deleteArchivedReferral(id,name){if(!confirm(`Supprimer définitivement le dossier ${name||''} ?\n\nCette action est irréversible.`))return;try{const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('Session administrateur expirée');const res=await fetch(`${SUPABASE_URL}/functions/v1/delete-referral`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_KEY},body:JSON.stringify({referral_id:id})});const out=await res.json().catch(()=>({}));if(!res.ok)throw new Error(out.error||'Suppression impossible');message('Dossier supprimé définitivement.');await loadArchives();await loadAdmin();}catch(err){message(err.message,true)}} window.deleteArchivedReferral=deleteArchivedReferral;
 $('refreshArchives')?.addEventListener('click',loadArchives);
 $('archiveSearch')?.addEventListener('input',renderArchives);
 $('archiveReasonFilter')?.addEventListener('change',renderArchives);
