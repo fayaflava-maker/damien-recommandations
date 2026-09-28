@@ -409,8 +409,13 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
 .hold-note{grid-column:1/-1;background:#fff7e7;color:#8a5b08;border:1px solid #f4d99c;border-radius:14px;padding:10px 12px;font-weight:700;margin-top:5px}
 .admin-kpi:nth-child(3){border-top-color:#f4cf28!important}
 </style>
-</head>
-<body data-app-version="17.2">
+<style id='v173'>
+.admin-actions,.contact-actions,.referral-actions{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px!important;width:100%!important}
+.admin-actions a,.admin-actions button,.contact-actions a,.contact-actions button,.referral-actions a,.referral-actions button{width:100%!important;min-width:0!important;height:48px!important;padding:0 10px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;white-space:nowrap!important;border-radius:14px!important;box-sizing:border-box!important}
+.delete-referrer,.delete-profile,[data-action='delete-referrer']{min-width:112px!important;height:46px!important;padding:0 14px!important;white-space:nowrap!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;border-radius:14px!important}
+@media(max-width:700px){.admin-actions,.contact-actions,.referral-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+</style></head>
+<body data-app-version="17.3">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -658,7 +663,7 @@ input,select,textarea{background:#fbfcfd!important;border:1px solid #dfe6ec!impo
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="17.2" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="17.3" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -805,7 +810,7 @@ function actionFeedback(button,text,err=false){
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 $('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
 
-// V17.2 — Sélection des communes par code postal, identique PC / mobile
+// V17.3 — Sélection des communes par code postal, identique PC / mobile
 const cityLookupCache = new Map();
 async function citiesForPostalCode(postal){
   const code=(postal||'').replace(/\D/g,'').slice(0,5);
@@ -1168,7 +1173,7 @@ function renderReferrers(rows){
      <div class="metric"><small>Mandats</small><b>${a.mandates}</b></div>
      <div class="metric"><small>Ventes</small><b>${a.sales}</b></div>
      <div class="metric"><small>Perçu</small><b>${a.paid.toLocaleString('fr-FR')} €</b><small>${a.due.toLocaleString('fr-FR')} € à payer</small></div>
-     <div><button type="button" class="danger-btn deleteReferrer" data-id="${a.id}" data-name="${esc((a.first_name||'')+' '+(a.last_name||''))}">Supprimer le profil</button></div>
+     <div><button type="button" class="danger-btn deleteReferrer" data-id="${a.id}" data-name="${esc((a.first_name||'')+' '+(a.last_name||''))}">Supprimer</button></div>
    </div>`;
  }).join('')||'<p class="muted">Aucun apporteur enregistré.</p>';
 }

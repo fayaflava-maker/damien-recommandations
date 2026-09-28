@@ -1,4 +1,4 @@
-const CACHE='damien-recommandations-v17-2';
+const CACHE='damien-recommandations-v17-3';
 const STATIC=['/manifest.webmanifest','/damien-royez.jpg','/favicon.png','/icons/apple-touch-icon.png','/icons/icon-192.png','/icons/icon-512.png','/icons/icon-maskable-512.png'];
 
 self.addEventListener('install',event=>{
