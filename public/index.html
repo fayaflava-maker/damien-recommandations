@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="/manifest.webmanifest?v=17.7.4.1">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=17.7.4.1">
-  <link rel="icon" type="image/png" href="/favicon.png?v=17.7.4.1">
+  <link rel="manifest" href="/manifest.webmanifest?v=17.7.5.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=17.7.5.1">
+  <link rel="icon" type="image/png" href="/favicon.png?v=17.7.5.1">
   <meta name="apple-mobile-web-app-title" content="Damien Reco">
   <title>Damien Recommandations</title>
   <style>
@@ -457,7 +457,7 @@ header>.wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 @media(max-width:600px){header>.wrap{flex-wrap:nowrap;gap:8px}.install-header-btn{font-size:12px;padding:10px 11px;white-space:normal;max-width:155px}.brandline{min-width:0}.brandline .sub{font-size:11px}}
 </style>
 </head>
-<body data-app-version="17.7.4">
+<body data-app-version="17.7.5">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -532,11 +532,16 @@ header>.wrap{display:flex;align-items:center;justify-content:space-between;gap:1
     </div>
     <div class="row">
       <button class="primary" id="login">Se connecter</button>
-      <button class="light" id="showSignup">Créer mon compte</button>
+      <button class="light" id="showSignup">Créer un compte</button>
     </div>
-    <div id="signupFields" class="hidden" style="margin-top:15px">
+    </section>
+    <section id="signupFields" class="card hidden" style="margin-top:15px">
+      <button class="light" id="backToLogin" type="button" style="margin-bottom:16px">← Retour à la connexion</button>
       <h3>Créer mon compte apporteur</h3>
       <div class="grid">
+        <label>Adresse e-mail *<input id="signupEmail" type="email" autocomplete="email" required placeholder="votre@email.fr"></label>
+        <label>Créer un mot de passe *<input id="signupPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="6 caractères minimum"></label>
+        <label>Confirmer le mot de passe *<input id="signupPasswordConfirm" type="password" autocomplete="new-password" minlength="6" required placeholder="Confirmez votre mot de passe"></label>
         <label>Prénom *<input id="firstName" autocomplete="given-name" required placeholder="Prénom"></label>
         <label>Nom *<input id="lastName" autocomplete="family-name" required placeholder="Nom"></label>
         <label>Téléphone *<input id="signupPhone" type="tel" autocomplete="tel" required placeholder="06…"></label>
@@ -713,7 +718,7 @@ header>.wrap{display:flex;align-items:center;justify-content:space-between;gap:1
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="17.7.4" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="17.7.5" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -858,9 +863,10 @@ function actionFeedback(button,text,err=false){
 }
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-$('showSignup').onclick=()=> $('signupFields').classList.toggle('hidden');
+$('showSignup').onclick=()=>{ $('auth').classList.add('hidden'); $('signupFields').classList.remove('hidden'); $('signupEmail').focus(); };
+$('backToLogin').onclick=()=>{ $('signupFields').classList.add('hidden'); $('auth').classList.remove('hidden'); clearMessage(); };
 
-// V17.7.4 — Sélection des communes par code postal, identique PC / mobile
+// V17.7.5 — Sélection des communes par code postal, identique PC / mobile
 const cityLookupCache = new Map();
 async function citiesForPostalCode(postal){
   const code=(postal||'').replace(/\D/g,'').slice(0,5);
@@ -924,9 +930,13 @@ $('signup').onclick=async()=>{
  const first=$('firstName').value.trim(), last=$('lastName').value.trim(), phone=$('signupPhone').value.trim();
  const address=$('signupAddress').value.trim(), postal=$('signupPostalCode').value.trim(), city=$('signupCity').value.trim();
  if(!first||!last||!phone||!address||!postal||!city) return message('Merci de compléter toutes vos coordonnées.',true);
+ const signupEmail=$('signupEmail').value.trim(), signupPassword=$('signupPassword').value;
+ if(!signupEmail||!signupPassword) return message('Indiquez votre adresse e-mail et choisissez un mot de passe.',true);
+ if(signupPassword.length<6) return message('Le mot de passe doit contenir au moins 6 caractères.',true);
+ if(signupPassword!==$('signupPasswordConfirm').value) return message('Les deux mots de passe ne correspondent pas.',true);
  if(!$('signupTerms').checked) return message('Vous devez accepter les conditions du programme, les CGU et la politique de confidentialité.',true);
  const {data,error}=await supabase.auth.signUp({
-   email:$('email').value.trim(), password:$('password').value,
+   email:signupEmail, password:signupPassword,
    options:{emailRedirectTo:'https://damien-recommandations.royezdamien.workers.dev/?confirmed=1',data:{first_name:first,last_name:last,phone,address,postal_code:postal,city,
      terms_version:'v14-2026-09-23',terms_accepted:'true'}}
  });
