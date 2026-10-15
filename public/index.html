@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <link rel="manifest" href="/manifest.webmanifest?v=17.7.5.1">
-  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=17.7.5.1">
-  <link rel="icon" type="image/png" href="/favicon.png?v=17.7.5.1">
+  <link rel="manifest" href="/manifest.webmanifest?v=17.7.6.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png?v=17.7.6.1">
+  <link rel="icon" type="image/png" href="/favicon.png?v=17.7.6.1">
   <meta name="apple-mobile-web-app-title" content="Damien Reco">
   <title>Damien Recommandations</title>
   <style>
@@ -453,11 +453,11 @@ header>.wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 .install-header-btn{border:0;background:#174a76;color:#fff;border-radius:13px;padding:12px 17px;font-weight:800;cursor:pointer;box-shadow:0 5px 14px #12395d25;white-space:nowrap}
 .install-header-btn:hover{background:#0d3558}
 .install-header>p{display:none}
-#installHelp:not(.hidden){position:absolute;right:0;top:calc(100% + 8px);width:min(330px,85vw);padding:15px;background:#fff;border:1px solid #d8edf2;border-radius:14px;box-shadow:0 12px 35px #12395d24;text-align:left;z-index:90;line-height:1.5;color:#183c60}
+#installHelp:not(.hidden){position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(12,30,52,.48);z-index:99999;text-align:left;color:#183c60}.install-guide-card{background:#fff;border-radius:22px;padding:26px;max-width:390px;width:100%;box-shadow:0 20px 70px #09203955}.install-guide-card h3{margin:0 0 14px;color:#12395d}.install-guide-card ol{padding-left:23px;line-height:1.75}.install-guide-close{background:#174a76;color:#fff;border:0;border-radius:12px;padding:12px 24px;font-weight:800;width:100%;cursor:pointer}
 @media(max-width:600px){header>.wrap{flex-wrap:nowrap;gap:8px}.install-header-btn{font-size:12px;padding:10px 11px;white-space:normal;max-width:155px}.brandline{min-width:0}.brandline .sub{font-size:11px}}
 </style>
 </head>
-<body data-app-version="17.7.5">
+<body data-app-version="17.7.6">
 <header>
   <div class="wrap" style="padding:0">
     <div class="brandline">
@@ -718,7 +718,7 @@ header>.wrap{display:flex;align-items:center;justify-content:space-between;gap:1
       </div>
     </section>
 
-    <section id="adminPanel" data-mobile-admin-version="17.7.5" class="card hidden">
+    <section id="adminPanel" data-mobile-admin-version="17.7.6" class="card hidden">
       <div class="admin-hero">
         <div style="font-size:12px;letter-spacing:2px;opacity:.75">ESPACE ADMINISTRATION</div>
         <h2>Bonjour Damien 👋</h2>
@@ -866,7 +866,7 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 $('showSignup').onclick=()=>{ $('auth').classList.add('hidden'); $('signupFields').classList.remove('hidden'); $('signupEmail').focus(); };
 $('backToLogin').onclick=()=>{ $('signupFields').classList.add('hidden'); $('auth').classList.remove('hidden'); clearMessage(); };
 
-// V17.7.5 — Sélection des communes par code postal, identique PC / mobile
+// V17.7.6 — Sélection des communes par code postal, identique PC / mobile
 const cityLookupCache = new Map();
 async function citiesForPostalCode(postal){
   const code=(postal||'').replace(/\D/g,'').slice(0,5);
@@ -1891,8 +1891,10 @@ boot();
      if(installPrompt){const prompt=installPrompt;installPrompt=null;await prompt.prompt();try{await prompt.userChoice;}catch(e){}return;}
      const ua=navigator.userAgent;const ios=/iPad|iPhone|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
      const safari=/Safari/.test(ua)&&!/CriOS|FxiOS|EdgiOS/.test(ua);
+     const steps=ios?(safari?['Touchez le bouton Partager dans Safari (carré avec une flèche).','Choisissez « Sur l’écran d’accueil ».','Touchez « Ajouter » pour terminer.']:['Ouvrez cette page dans Safari.','Touchez Partager, puis « Sur l’écran d’accueil ».','Touchez « Ajouter ».']):['Ouvrez le menu de votre navigateur.','Choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ».','Confirmez l’installation.'];
+     help.innerHTML='<div class="install-guide-card" role="dialog" aria-modal="true" aria-label="Installer l’application"><h3>📲 Installer Damien Recommandations</h3><ol>'+steps.map(x=>'<li>'+x+'</li>').join('')+'</ol><button type="button" class="install-guide-close">Compris</button></div>';
      help.classList.remove('hidden');
-     help.textContent=ios?(safari?'Sur iPhone : touchez Partager (carré avec une flèche), puis « Sur l’écran d’accueil » et « Ajouter ».':'Sur iPhone : ouvrez cette page dans Safari, touchez Partager, puis « Sur l’écran d’accueil » et « Ajouter ».'):'Dans le menu de votre navigateur, choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil ». Sur Chrome ou Edge, l’icône d’installation peut aussi apparaître dans la barre d’adresse.';
+     help.querySelector('.install-guide-close').onclick=()=>help.classList.add('hidden');
    });
    window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installPrompt=e;});
    window.addEventListener('appinstalled',()=>{area.style.display='none';installPrompt=null;});
